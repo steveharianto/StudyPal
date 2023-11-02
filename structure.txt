@@ -29,5 +29,11 @@
         -> Home
         -> Messages
         -> My Lessons
+        -> Profile
 
 == TutorDashboard
+    (Dashboard Header)
+        -> Home
+        -> Messages
+        -> My Lessons
+        -> Profile

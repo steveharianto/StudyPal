@@ -1,0 +1,33 @@
+== Home
+    (header)
+        -> Find Tutor
+        -> Become Tutor
+        -> Login
+
+== Login
+    -> Sign up as student
+    -> Sign up as Tutor
+
+== SignupStudent
+    -> Google
+    -> Facebook
+    -> Name, Email, Password
+    
+== SignupTutor
+    -> Google
+    -> Facebook
+    -> Name, Email, Password
+
+== FindTutor
+    -> Filters = Subject, Price Range, Schedule, Language
+    -> Sort By
+    -> Search by name or keyword
+    
+== StudentDashboard
+    - Balance
+    (Dashboard Header)
+        -> Home
+        -> Messages
+        -> My Lessons
+
+== TutorDashboard

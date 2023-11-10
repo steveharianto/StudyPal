@@ -8,12 +8,12 @@
     -> Sign up as student
     -> Sign up as Tutor
 
-== SignupStudent
+== RegisterStudent
     -> Google
     -> Facebook
     -> Name, Email, Password
     
-== SignupTutor
+== RegisterTutor
     -> Google
     -> Facebook
     -> Name, Email, Password
@@ -23,7 +23,7 @@
     -> Sort By
     -> Search by name or keyword
     
-== StudentDashboard
+== DashboardStudent
     - Balance
     (Dashboard Header)
         -> Home
@@ -31,7 +31,7 @@
         -> My Lessons
         -> Profile
 
-== TutorDashboard
+== DashboardTutor
     (Dashboard Header)
         -> Home
         -> Messages

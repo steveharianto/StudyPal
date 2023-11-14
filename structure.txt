@@ -1,29 +1,29 @@
-== Home
+== Home (Nich)
     (header)
         -> Find Tutor
         -> Become Tutor
         -> Login
 
-== Login
+== Login (Shawn)
     -> Sign up as student
     -> Sign up as Tutor
 
-== RegisterStudent
+== RegisterStudent (Shawn)
     -> Google
     -> Facebook
     -> Name, Email, Password
     
-== RegisterTutor
+== RegisterTutor (Shawn)
     -> Google
     -> Facebook
     -> Name, Email, Password
 
-== FindTutor
+== FindTutor (Stev)
     -> Filters = Subject, Price Range, Schedule, Language
     -> Sort By
     -> Search by name or keyword
     
-== DashboardStudent
+== DashboardStudent (Nich)
     - Balance
     (Dashboard Header)
         -> Home
@@ -31,7 +31,7 @@
         -> My Lessons
         -> Profile
 
-== DashboardTutor
+== DashboardTutor (Stev)
     (Dashboard Header)
         -> Home
         -> Messages

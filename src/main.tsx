@@ -9,6 +9,9 @@ import Login from "./pages/Login";
 import FindTutor from "./pages/FindTutor";
 import DashboardStudent from "./pages/DashboardStudent";
 import DashboardTutor from "./pages/DashboardTutor";
+import DashboardStudentMyLessons from "./pages/DashboardStudentMyLessons";
+import DashboardStudentMessages from "./pages/DashboardStudentsMessages";
+import DashboardStudentHome from "./pages/DashboardStudentHome";
 
 const router = createBrowserRouter([
     {
@@ -40,6 +43,20 @@ const router = createBrowserRouter([
       path: "/dashboard-student", 
       element: <DashboardStudent />,
       errorElement: <Error/>,
+      children: [
+        {
+          path: "home",
+          element: <DashboardStudentHome />,
+        },
+        {
+          path: "messages", 
+          element: <DashboardStudentMessages />,
+        },
+        {
+          path: "my-lessons",
+          element: <DashboardStudentMyLessons />,
+        },
+      ],
     },
     {
       path: "/dashboard-tutor", 

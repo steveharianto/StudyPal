@@ -1,21 +1,42 @@
 import React from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFacebook, faInstagram, faYoutube, faLinkedin, faTiktok } from '@fortawesome/free-brands-svg-icons';
-import { faEnvelope, faPhone, faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFacebook,
+  faInstagram,
+  faYoutube,
+  faLinkedin,
+  faTiktok,
+} from "@fortawesome/free-brands-svg-icons";
+import {
+  faEnvelope,
+  faPhone,
+  faMapMarkerAlt,
+} from "@fortawesome/free-solid-svg-icons";
 
 const Home: React.FC = () => {
   return (
     <div className="container mx-auto">
       <nav className="flex justify-between items-center p-4 shadow-md bg-white">
         <div className="flex items-center">
-          <img src="/logo.png" alt="Logo" className="h-8 mr-4" /> {/* Replace with your logo image */}
-          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">Home</a>
-          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">Find Tutors</a>
-          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">Become a Tutor</a>
+          <img src="/logo.png" alt="Logo" className="h-8 mr-2" />{" "}
+          {/* Replace with your logo image */}
+          <span className="px-4 py-2 text-black text-lg font-bold">
+            Studypal
+          </span>
+          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+            Home
+          </a>
+          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+            Find Tutors
+          </a>
+          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+            Become a Tutor
+          </a>
         </div>
         <div>
-          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">Log In</a>
+          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+            Log In
+          </a>
         </div>
       </nav>
       <header className="text-center p-10 bg-blue-200 grid grid-cols-2 gap-4">
@@ -60,10 +81,7 @@ const Home: React.FC = () => {
             {/* Repeat this block for each category */}
             <div className="border p-4 flex flex-row items-center hover:shadow-lg transition-shadow duration-300 ease-in-out">
               <div className="w-1/4">
-                <img
-                  src="./ukFlag.png"
-                  alt="UK Flag"
-                />
+                <img src="./ukFlag.png" alt="UK Flag" />
               </div>
               <div className="w-3/4">
                 <div className="font-bold mb-2">English tutors</div>
@@ -72,10 +90,7 @@ const Home: React.FC = () => {
             </div>
             <div className="border p-4 flex flex-row items-center hover:shadow-lg transition-shadow duration-300 ease-in-out">
               <div className="w-1/4">
-                <img
-                  src="./frenchFlag.png"
-                  alt="French Flag"
-                />
+                <img src="./frenchFlag.png" alt="French Flag" />
               </div>
               <div className="w-3/4">
                 <div className="font-bold mb-2">French tutors</div>
@@ -84,10 +99,7 @@ const Home: React.FC = () => {
             </div>
             <div className="border p-4 flex flex-row items-center hover:shadow-lg transition-shadow duration-300 ease-in-out">
               <div className="w-1/4">
-                <img
-                  src="./germanFlag.png"
-                  alt="German Flag"
-                />
+                <img src="./germanFlag.png" alt="German Flag" />
               </div>
               <div className="w-3/4">
                 <div className="font-bold mb-2">German tutors</div>
@@ -96,10 +108,7 @@ const Home: React.FC = () => {
             </div>
             <div className="border p-4 flex flex-row items-center hover:shadow-lg transition-shadow duration-300 ease-in-out">
               <div className="w-1/4">
-                <img
-                  src="./spanishFlag.png"
-                  alt="Spanish Flag"
-                />
+                <img src="./spanishFlag.png" alt="Spanish Flag" />
               </div>
               <div className="w-3/4">
                 <div className="font-bold mb-2">Spanish tutors</div>
@@ -126,28 +135,51 @@ const Home: React.FC = () => {
                 1
               </div>
               <h3 className="font-bold text-xl mb-2">Find your tutor.</h3>
-              <p className="px-6 mb-6">We'll connect you with a tutor who will motivate, challenge, and inspire you.</p>
-              <img className="rounded-lg mb-6" src="./teacher_profile_placeholder_image.jpg" alt="Tutor profile" />
+              <p className="px-6 mb-6">
+                We'll connect you with a tutor who will motivate, challenge, and
+                inspire you.
+              </p>
+              <img
+                className="rounded-lg mb-6"
+                src="./teacher_profile_placeholder_image.jpg"
+                alt="Tutor profile"
+              />
             </div>
-            
+
             {/* Step 2 */}
             <div className="flex flex-col items-center bg-white rounded-lg shadow-lg transform hover:-translate-y-2 transition duration-300">
               <div className="rounded-full h-16 w-16 flex items-center justify-center bg-yellow-500 text-white text-2xl font-bold mb-4 mt-6">
                 2
               </div>
               <h3 className="font-bold text-xl mb-2">Start learning.</h3>
-              <p className="px-6 mb-6">Your tutor will guide the way through your first lesson and help you plan your next steps.</p>
-              <img className="rounded-lg mb-6" src="./learning_session_placeholder_image.jpg" alt="Learning session" />
+              <p className="px-6 mb-6">
+                Your tutor will guide the way through your first lesson and help
+                you plan your next steps.
+              </p>
+              <img
+                className="rounded-lg mb-6"
+                src="./learning_session_placeholder_image.jpg"
+                alt="Learning session"
+              />
             </div>
-            
+
             {/* Step 3 */}
             <div className="flex flex-col items-center bg-white rounded-lg shadow-lg transform hover:-translate-y-2 transition duration-300">
               <div className="rounded-full h-16 w-16 flex items-center justify-center bg-blue-500 text-white text-2xl font-bold mb-4 mt-6">
                 3
               </div>
-              <h3 className="font-bold text-xl mb-2">Speak. Read. Write. Repeat.</h3>
-              <p className="px-6 mb-6">Choose how many lessons you want to take each week and get ready to reach your goals!</p>
-              <img className="rounded-lg mb-6" src="./study_plan_placeholder_image.jpg" alt="Study plan" />
+              <h3 className="font-bold text-xl mb-2">
+                Speak. Read. Write. Repeat.
+              </h3>
+              <p className="px-6 mb-6">
+                Choose how many lessons you want to take each week and get ready
+                to reach your goals!
+              </p>
+              <img
+                className="rounded-lg mb-6"
+                src="./study_plan_placeholder_image.jpg"
+                alt="Study plan"
+              />
             </div>
           </div>
         </div>
@@ -156,13 +188,25 @@ const Home: React.FC = () => {
         <div className="w-10/12 flex items-center bg-teal-600 text-white p-10 mx-auto rounded-lg shadow-xl">
           <div className="w-5/12 flex justify-center">
             <div className="relative">
-              <div className="absolute -inset-1 bg-white blur" style={{ zIndex: -1 }}></div>
-              <img src="./tutor_placeholder_image.jpeg" alt="Become a tutor" className="rounded-xl relative z-10" />
+              <div
+                className="absolute -inset-1 bg-white blur"
+                style={{ zIndex: -1 }}
+              ></div>
+              <img
+                src="./tutor_placeholder_image.jpeg"
+                alt="Become a tutor"
+                className="rounded-xl relative z-10"
+              />
             </div>
           </div>
           <div className="w-7/12 pl-10 pr-20">
-            <h2 className="text-6xl font-bold mb-6 leading-tight">Become a tutor</h2>
-            <p className="mb-4 text-lg">Earn money sharing your expert knowledge with students. Sign up to start tutoring online with Studypal.</p>
+            <h2 className="text-6xl font-bold mb-6 leading-tight">
+              Become a tutor
+            </h2>
+            <p className="mb-4 text-lg">
+              Earn money sharing your expert knowledge with students. Sign up to
+              start tutoring online with Studypal.
+            </p>
             <ul className="list-disc list-inside mb-6 space-y-2">
               <li>Find new students</li>
               <li>Grow your business</li>
@@ -170,11 +214,24 @@ const Home: React.FC = () => {
             </ul>
             <button className="bg-black hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 ease-in-out flex items-center">
               <span>Become a tutor</span>
-              <svg className="ml-3 w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="ml-3 w-5 h-5"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
               </svg>
             </button>
-            <a href="#" className="text-sm text-teal-200 underline hover:text-teal-100 mt-4 inline-block transition-colors duration-300 ease-in-out">How our platform works</a>
+            <a
+              href="#"
+              className="text-sm text-teal-200 underline hover:text-teal-100 mt-4 inline-block transition-colors duration-300 ease-in-out"
+            >
+              How our platform works
+            </a>
           </div>
         </div>
       </section>
@@ -182,73 +239,136 @@ const Home: React.FC = () => {
         {/* About Us Section */}
         <div className="bg-gradient-to-r from-blue-500 to-teal-300 py-20 mt-16 text-white text-center">
           <h2 className="text-6xl font-extrabold mb-4">Discover Studypal</h2>
-          <p className="text-xl mb-6">Connecting students and tutors globally.</p>
+          <p className="text-xl mb-6">
+            Connecting students and tutors globally.
+          </p>
           <div className="w-10/12 mx-auto text-lg">
-            <p>Studypal is dedicated to connecting students with the best tutors around the world. We believe in the power of education and the impact of one-on-one tutoring. Our mission is to make quality education accessible to everyone, everywhere.</p>
-            <p className="mt-4">Founded in 2023, we have grown to support thousands of students and tutors, fostering a community where learning thrives.</p>
+            <p>
+              Studypal is dedicated to connecting students with the best tutors
+              around the world. We believe in the power of education and the
+              impact of one-on-one tutoring. Our mission is to make quality
+              education accessible to everyone, everywhere.
+            </p>
+            <p className="mt-4">
+              Founded in 2023, we have grown to support thousands of students
+              and tutors, fostering a community where learning thrives.
+            </p>
           </div>
         </div>
 
         {/* Contact Us Section */}
         <div className="bg-white py-10">
-          <div className="text-center font-bold text-4xl mb-8">
-            Contact Us
-          </div>
+          <div className="text-center font-bold text-4xl mb-8">Contact Us</div>
           <div className="w-8/12 py-10 mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
             {/* Contact Form */}
             <div className="bg-gray-100 px-8 pb-4 rounded-lg shadow-lg">
-              <h3 className="text-3xl font-bold mb-6 text-blue-600">Get in Touch</h3>
+              <h3 className="text-3xl font-bold mb-6 text-blue-600">
+                Get in Touch
+              </h3>
               <form>
                 <div className="mb-4">
-                  <input type="text" placeholder="Your Name" className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
                 <div className="mb-4">
-                  <input type="email" placeholder="Email Address" className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
                 <div className="mb-4">
-                  <textarea placeholder="Your Message" className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4"></textarea>
+                  <textarea
+                    placeholder="Your Message"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows="4"
+                  ></textarea>
                 </div>
-                <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <button
+                  type="submit"
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
                   Send Message
                 </button>
               </form>
             </div>
             {/* Contact Information */}
             <div className="space-y-4">
-              <h3 className="text-3xl font-bold mb-4 text-blue-600">Contact Information</h3>
+              <h3 className="text-3xl font-bold mb-4 text-blue-600">
+                Contact Information
+              </h3>
               <p className="flex items-center text-lg">
-                <FontAwesomeIcon icon={faEnvelope} className="mr-2 text-blue-500" />
+                <FontAwesomeIcon
+                  icon={faEnvelope}
+                  className="mr-2 text-blue-500"
+                />
                 contact@studypal.com
               </p>
               <p className="flex items-center text-lg">
-                <FontAwesomeIcon icon={faPhone} className="mr-2 text-green-500" />
+                <FontAwesomeIcon
+                  icon={faPhone}
+                  className="mr-2 text-green-500"
+                />
                 +628999128428
               </p>
               <p className="flex items-center text-lg">
-                <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-red-500" />
+                <FontAwesomeIcon
+                  icon={faMapMarkerAlt}
+                  className="mr-2 text-red-500"
+                />
                 123 Education St, Harare City, Zimbabwe
               </p>
               <div className="mt-6">
                 <h4 className="text-xl font-bold mb-4">Follow Us</h4>
                 <div className="flex justify-start gap-4">
                   {/* Social Media Icons */}
-                  <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-700">
+                  <a
+                    href="https://www.facebook.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-blue-700"
+                  >
                     <FontAwesomeIcon icon={faFacebook} size="2x" />
                   </a>
-                  <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600">
+                  <a
+                    href="https://www.instagram.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-pink-600"
+                  >
                     <FontAwesomeIcon icon={faInstagram} size="2x" />
                   </a>
-                  <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-red-600">
+                  <a
+                    href="https://www.youtube.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-red-600"
+                  >
                     <FontAwesomeIcon icon={faYoutube} size="2x" />
                   </a>
-                  <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">
+                  <a
+                    href="https://www.linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-blue-600"
+                  >
                     <FontAwesomeIcon icon={faLinkedin} size="2x" />
                   </a>
-                  <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" className="hover:text-black">
+                  <a
+                    href="https://www.tiktok.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-black"
+                  >
                     <FontAwesomeIcon icon={faTiktok} size="2x" />
                   </a>
                 </div>
-                <div className="text-md mt-24 font-semibold">© 2023 PT Studypal Utama</div>
+                <div className="text-md mt-24 font-semibold">
+                  © 2023 PT Studypal Utama
+                </div>
               </div>
             </div>
           </div>

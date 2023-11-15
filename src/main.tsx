@@ -6,6 +6,9 @@ import Home from "./pages/Home";
 import RegisterStudent from "./pages/RegisterStudent";
 import RegisterTutor from "./pages/RegisterTutor";
 import Login from "./pages/Login";
+import FindTutor from "./pages/FindTutor";
+import DashboardStudent from "./pages/DashboardStudent";
+import DashboardTutor from "./pages/DashboardTutor";
 
 const router = createBrowserRouter([
     {
@@ -26,6 +29,21 @@ const router = createBrowserRouter([
     {
       path: "/register-tutor", 
       element: <RegisterTutor />,
+      errorElement: <Error/>,
+    },
+    {
+      path: "/find-tutor", 
+      element: <FindTutor />,
+      errorElement: <Error/>,
+    },
+    {
+      path: "/dashboard-student", 
+      element: <DashboardStudent />,
+      errorElement: <Error/>,
+    },
+    {
+      path: "/dashboard-tutor", 
+      element: <DashboardTutor />,
       errorElement: <Error/>,
     },
   ]);

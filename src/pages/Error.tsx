@@ -1,12 +1,19 @@
-import image from '../assets/404.png'
+import { Link, useRouteError } from "react-router-dom";
 
-function Error() {
-    return (
-        <div className="w-full h-screen">
-            <img src={image} className='w-1/4 ml-auto mr-auto mt-16'/>
-            <h1 className="font-bold text-3xl text-center m-auto -mt-10">PAGE NOT FOUND</h1>
-        </div>
-    );
-}
+const Error = () => {
+  const error = useRouteError()
+  
+  return (
+    <div className="flex flex-col w-full h-screen justify-center items-center gap-y-4">
+
+    {error.status==401 && <div className="text-xl font-semibold">You aren't authorized to see this</div>}
+    {error.status==403 && <div className="text-xl font-semibold">Forbidden</div>}
+    {error.status==404 && <div className="text-xl font-semibold">404 Page Not Found</div>}
+
+      <Link to="/" className="text-blue-700">Go back</Link>
+    </div>
+  );
+};
 
 export default Error;
+

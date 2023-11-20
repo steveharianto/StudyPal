@@ -12,6 +12,7 @@ import {
   faPhone,
   faMapMarkerAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
 
 const Home: React.FC = () => {
   return (
@@ -34,9 +35,9 @@ const Home: React.FC = () => {
           </a>
         </div>
         <div>
-          <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+          <Link to={`/login`} className="px-4 py-2 text-gray-700 hover:text-blue-500">
             Log In
-          </a>
+          </Link>
         </div>
       </nav>
       <header className="text-center p-10 bg-blue-200 grid grid-cols-2 gap-4">

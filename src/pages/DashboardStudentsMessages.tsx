@@ -58,13 +58,13 @@ const DashboardStudentMessages = () => {
   };
 
   return (
-    <div className="flex" style={{ height: 'calc(100vh - 8.8rem)' }}>
+    <div className="flex h-[80vh]">
       {/* Chat List */}
-      <div className="w-1/4 bg-gray-200 p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 8.8rem)' }}>
+      <div className="w-1/4 bg-gradient-to-b from-gray-200 to-gray-300 p-4 overflow-y-auto max-h-[80vh]">
         {chats.map((chat) => (
           <div
             key={chat.id}
-            className="p-3 hover:bg-gray-300 cursor-pointer"
+            className="p-3 mb-2 hover:bg-gradient-to-r from-purple-300 to-pink-300 cursor-pointer rounded-lg"
             onClick={() => handleChatSelect(chat.id)}
           >
             <p className="font-semibold">{chat.name}</p>
@@ -76,20 +76,16 @@ const DashboardStudentMessages = () => {
       </div>
 
       {/* Chat Window */}
-      <div className="flex flex-col w-3/4 bg-white" style={{ maxHeight: 'calc(100vh - 8.8rem)' }}>
+      <div className="flex flex-col w-3/4 bg-gradient-to-b from-white to-gray-100 max-h-[80vh]">
         {/* Chat Messages */}
         <div className="flex-grow overflow-y-auto p-4">
           {chats[selectedChat].messages.map((message, index) => (
             <div
               key={index}
-              className={`flex mb-4 ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={`flex mb-4 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`p-2 rounded-md ${
-                  message.sender === "user" ? "bg-blue-100" : "bg-gray-200"
-                }`}
+                className={`p-3 rounded-lg ${message.sender === "user" ? "bg-blue-200" : "bg-green-200"} shadow-md`}
               >
                 <p>{message.text}</p>
               </div>
@@ -98,18 +94,18 @@ const DashboardStudentMessages = () => {
         </div>
 
         {/* Message Input */}
-        <div className="p-3 border-t-2">
-          <div className="flex items-center space-x-2">
+        <div className="p-3 border-t-2 border-gray-300">
+          <div className="flex items-center space-x-3">
             <input
               type="text"
-              className="flex-grow p-2 border rounded"
+              className="flex-grow p-3 border rounded-lg shadow-sm"
               placeholder="Type a message"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleMessageSend()}
             />
             <button
-              className="p-2 bg-blue-500 text-white rounded-full"
+              className="p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg"
               onClick={handleMessageSend}
             >
               <AiOutlineSend />

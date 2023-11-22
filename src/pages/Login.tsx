@@ -27,7 +27,7 @@ const Login = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 w-full h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-teal-300">
-      <div className="lg:col-span-3 flex justify-center items-center bg-white rounded-lg shadow-xl lg:m-20">
+      <div className="lg:col-span-3 flex justify-center items-center bg-white rounded-lg shadow-xl max-h-screen">
         <div className="w-full max-w-md p-8">
           <h2 className="text-3xl font-bold mb-6 text-indigo-800">
             Welcome Back! ✨

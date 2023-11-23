@@ -23,7 +23,10 @@
             "image": "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*4vlkTJCWbP2Kh2vyK9BdEw.png",
             "name": "Flutter for Beginners",
             "description": "In a \"Flutter for Beginners\" tutor class, aspiring developers are introduced to the fundamentals of Flutter, a popular open-source framework for building natively compiled applications for mobile, web, and desktop from a single codebase.",
-            "tutor": "U001"
+            "tutor": "U001",
+            "tag" : "IT & Software",
+            "price": 125000,
+            "rating": 4.9
         }
     ],
     "activeClass": [

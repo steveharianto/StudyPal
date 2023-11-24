@@ -1,10 +1,21 @@
 import { useForm } from "react-hook-form";
 import Joi from "joi";
 import { joiResolver } from "@hookform/resolvers/joi";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "@firebase/firestore";
+import db from "../firebase";
 import image from "../assets/login.png";
 import google from "../assets/google.png";
 
 // Joi schema for form validation
+const UsersCollectionRef = collection(db, "users");
+
 const schema = Joi.object({
   email: Joi.string()
     .email({ tlds: { allow: false } })
@@ -21,8 +32,9 @@ const Login = () => {
     resolver: joiResolver(schema),
   });
 
-  const onSubmit = (data) => {
-    console.log(data); // Handle login logic here
+  const onSubmit = async (data) => {
+    const users = await getDocs(UsersCollectionRef)
+    console.log(users.docs.map((elem) => ({ ...elem.data(), id: elem.id })));
   };
 
   return (
@@ -124,6 +136,6 @@ const Login = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Login;

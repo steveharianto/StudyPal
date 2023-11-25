@@ -120,7 +120,7 @@ function DashboardTutorMyLessons() {
         if (dayIndex !== -1) {
             const day = daysActual[dayIndex];
             const formattedTime = `${time.slice(0, 2).padStart(2, "0")}:00 - ${String(parseInt(time) + 1).padStart(2, "0")}:00`;
-            return `${day} ${formattedTime}`;
+            return `${day}, ${formattedTime}`;
         }
 
         return session; // Return original input if the day is not found
@@ -209,14 +209,7 @@ function DashboardTutorMyLessons() {
 
                         if (thisClass?.tutor == currentUser.userID)
                             return (
-                                <div
-                                    key={lesson.classID}
-                                    className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center justify-between space-x-4 hover:cursor-pointer"
-                                    onClick={() => {
-                                        setCurrentClass(lesson);
-                                        setIsModal(true);
-                                    }}
-                                >
+                                <div key={lesson.classID} className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center justify-between space-x-4 hover:cursor-pointer">
                                     <div className="flex items-center space-x-4">
                                         <img src={thisClass.image} alt="Tutor" className="h-16 w-16 rounded-full" />
                                         <div>
@@ -235,11 +228,12 @@ function DashboardTutorMyLessons() {
                     <div className="bg-white w-[70em] h-[40em] p-4 rounded-lg shadow-lg flex justify-between overflow-y-auto">
                         <div className="flex flex-col w-[30%] h-full justify-between">
                             <div>
-                                <div className="rounded-lg h-[45%]">
+                                <div className="rounded-lg h-[55%]">
                                     <img src={currentClass.image} alt="" className="object-cover h-full w-full rounded-t-lg" />
                                 </div>
-                                <h2 className="text-xl font-semibold mb-4">{currentClass.name} </h2>
-                                <p className="text-gray-700 text-sm">{currentClass.description}</p>
+                                <h2 className="text-xl font-semibold mb-1">{currentClass.name} </h2>
+                                <div className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[0.75em] rounded-md h-fit w-fit my-auto">{currentClass.tag}</div>
+                                <p className="text-gray-700 text-sm mt-4">{currentClass.description}</p>
                             </div>
                             <div>
                                 <button

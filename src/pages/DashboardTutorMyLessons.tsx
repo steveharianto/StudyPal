@@ -110,6 +110,22 @@ function DashboardTutorMyLessons() {
         }
     };
 
+    // Utility
+    const convertToReadableFormat = (session) => {
+        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const daysActual = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const dayIndex = daysOfWeek.indexOf(session.split("-")[0]);
+        const time = session.split("-")[1];
+
+        if (dayIndex !== -1) {
+            const day = daysActual[dayIndex];
+            const formattedTime = `${time.slice(0, 2).padStart(2, "0")}:00 - ${String(parseInt(time) + 1).padStart(2, "0")}:00`;
+            return `${day} ${formattedTime}`;
+        }
+
+        return session; // Return original input if the day is not found
+    };
+
     // Generate Time Table
     const generateTableRows = () => {
         return timeIntervals.map((interval, index) => (
@@ -142,7 +158,7 @@ function DashboardTutorMyLessons() {
         <>
             <div className="h-[60vh] mx-16 mt-4">
                 <h2 className="text-2xl font-bold text-blue-600 mb-6">My Lessons</h2>
-                <div className="h-[50vh] overflow-auto">
+                <div className="max-h-[50vh] overflow-auto">
                     {classes.map(
                         (lesson) =>
                             lesson.tutor == currentUser.userID && (
@@ -161,6 +177,57 @@ function DashboardTutorMyLessons() {
                                 </div>
                             )
                     )}
+                </div>
+
+                <h2 className="text-2xl font-bold text-blue-600 mb-6">My Live Lessons</h2>
+                <div className="max-h-[50vh] overflow-auto">
+                    {activeClass.map((lesson) => {
+                        const thisClass = classes.find((c) => c.classID === lesson.classID);
+                        const thisStudents = users.filter((user) => lesson.students.includes(user.userID));
+
+                        const today = new Date().toLocaleString("en-US", { weekday: "short" });
+                        const currentTime = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
+                        const currentDayIndex = thisClass.schedule.findIndex((session) => session.startsWith(today));
+
+                        let nextSession = " - ";
+
+                        if (currentDayIndex !== -1) {
+                            const currentSessionTime = thisClass?.schedule[currentDayIndex].split("-")[1];
+
+                            if (currentTime < currentSessionTime) {
+                                nextSession = thisClass.schedule[currentDayIndex];
+                            } else {
+                                // Find the next session on the next day
+                                const nextDayIndex = (currentDayIndex + 1) % thisClass.schedule.length;
+                                nextSession = thisClass.schedule[nextDayIndex];
+                            }
+                        } else {
+                            // If today's session is not in the schedule, return the first session of the schedule
+                            nextSession = thisClass.schedule[0];
+                        }
+
+                        if (thisClass?.tutor == currentUser.userID)
+                            return (
+                                <div
+                                    key={lesson.classID}
+                                    className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center justify-between space-x-4 hover:cursor-pointer"
+                                    onClick={() => {
+                                        setCurrentClass(lesson);
+                                        setIsModal(true);
+                                    }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <img src={thisClass.image} alt="Tutor" className="h-16 w-16 rounded-full" />
+                                        <div>
+                                            <span className="font-semibold text-white text-lg">{thisClass.name}</span>
+                                            <span className="block text-gray-200">Next Session : {convertToReadableFormat(nextSession)} </span>
+                                            <span className="block text-gray-200">Students : {thisStudents.map((student) => student.username).join(", ")} </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                    })}
                 </div>
             </div>
             {isModal && (

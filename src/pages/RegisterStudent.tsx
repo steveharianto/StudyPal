@@ -311,7 +311,7 @@ const RegisterStudent = () => {
               <div className="mt-8 text-center">
                 <p className="text-gray-600">Already have an account?</p>
                 <a
-                  href="/register-student"
+                  href="/login"
                   className="text-blue-600 hover:text-blue-800 font-semibold"
                 >
                   Go to Login Page

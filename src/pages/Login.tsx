@@ -8,6 +8,8 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  query,
+  where,
 } from "@firebase/firestore";
 import db from "../firebase";
 import image from "../assets/login.png";
@@ -20,6 +22,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
+import { IoIosEye, IoIosEyeOff } from "react-icons/io";
 import { useState } from "react";
 
 // Joi schema for form validation
@@ -36,6 +39,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [modalContent, setModalContent] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -46,28 +50,46 @@ const Login = () => {
   });
 
   const onSubmit = async (data) => {
-    const users = await getDocs(UsersCollectionRef);
-    const targetUser = users.docs.find(
-      (elem) => elem.email == data.username && elem.password == data.password
-    );
-    if (targetUser) {
-      if (targetUser.role == "student") {
-        navigate(`/dashboard-student`);
-      } else if (targetUser.role == "tutor") {
-        navigate("dashboard-tutor");
+    try {
+      const userQuery = query(
+        UsersCollectionRef,
+        where("email", "==", data.email)
+      );
+      const querySnapshot = await getDocs(userQuery);
+      const userDoc = querySnapshot.docs.find(
+        (doc) => doc.data().password === data.password
+      );
+
+      if (userDoc) {
+        const userData = userDoc.data();
+        if (userData.role === "student") {
+          navigate("/dashboard-student");
+        } else if (userData.role === "tutor") {
+          navigate("/dashboard-tutor");
+        } else {
+          console.log(userData.role)
+          setModalContent(
+            "Internal Server Error, please contact customer service"
+          );
+          setOpen(true);
+        }
       } else {
-        setModalContent("Internal Server Error, please contact customer service");
+        setModalContent("User not found or password incorrect");
         setOpen(true);
       }
-    } else {
-      setModalContent("User not found or password incorrect");
+    } catch (error) {
+      console.error("Login error:", error);
+      setModalContent("An error occurred during login. Please try again.");
       setOpen(true);
     }
-    console.log(users.docs.map((elem) => ({ ...elem.data(), id: elem.id })));
   };
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -106,15 +128,24 @@ const Login = () => {
               >
                 Password
               </label>
-              <input
-                id="password"
-                {...register("password")}
-                type="password"
-                className={`mb-1 p-3 w-full rounded border ${
-                  errors.password ? "border-red-500" : "border-pink-300"
-                } focus:border-pink-500 focus:ring focus:ring-pink-200 transition duration-200 outline-none`}
-                placeholder="Enter your password"
-              ></input>
+              <div className="relative">
+                <input
+                  id="password"
+                  {...register("password")}
+                  type={showPassword ? "text" : "password"}
+                  className={`mb-1 p-3 w-full rounded border ${
+                    errors.password ? "border-red-500" : "border-pink-300"
+                  } focus:border-pink-500 focus:ring focus:ring-pink-200 transition duration-200 outline-none`}
+                  placeholder="Enter your password"
+                ></input>
+                <div
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-md leading-5"
+                  onClick={togglePasswordVisibility}
+                >
+                  {/* Replace with your eye icon */}
+                  {showPassword ? <IoIosEyeOff /> : <IoIosEye />}
+                </div>
+              </div>
               {errors.password && (
                 <p className="text-red-500 text-xs italic mb-3">
                   {errors.password.message}

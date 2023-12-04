@@ -14,61 +14,39 @@
             "email": "user2@gmail.com",
             "password": "pass0002",
             "dob": "2023-11-21T12:30:45.678Z",
-            "role": "Tutor"
+            "role": "Tutor",
+            "price": 12000,
+            "subject": "Mathematics",
+            "description": "hello, i am a math teacher ahaha",
+            "schedule": ["Mon-11", "Thu-11", "Tue-11"]
         }
     ],
     "class": [
         {
             "classID": "C001",
-            "image": "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*4vlkTJCWbP2Kh2vyK9BdEw.png",
-            "name": "Flutter for Beginners",
-            "description": "In a \"Flutter for Beginners\" tutor class, aspiring developers are introduced to the fundamentals of Flutter, a popular open-source framework for building natively compiled applications for mobile, web, and desktop from a single codebase.",
-            "tutor": "U001",
-            "tag" : "IT & Software",
-            "price": 125000,
-            "rating": 4.9
+            "tutor": "tutor1",
+            "student": "nicholaswijaya",
+            "schedule": ["Mon-11", "Tue-11", "Thu-11"]
         }
     ],
-    "activeClass": [
+    "messages": [
         {
-            "activeClassID": "AC001",
-            "classID": "C001",
-            "schedule": ["Mon-11", "Tue-11", "Thu-11"],
-            "students": ["U002", "U003", "U004", "U005", "U006"],
-            "chatID": "CH001"
-        }
-    ],
-    "schedule": [
-        {
-            "userID": "U001",
-            "available": ["Mon-11", "Mon-12", "Mon-13", "Mon-14", "Tue-15"]
-        }
-    ],
-    "chat": [
-        {
-            "chatID": "CH001",
-            "members": ["U001", "U002", "U003"],
-            "isActive": true
-        }
-    ],
-    "chatLog": [
-        {
-            "chatID": "AC001",
-            "userID": "U001",
+            "tutor": "tutor1",
+            "student": "nicholaswijaya",
             "type": "text",
             "content": "kak, hari ini sy gabisa ikut meeting, sakit panas...",
             "timestamp": "2023-11-21T12:30:45.678Z"
         },
         {
-            "chatID": "AC001",
-            "userID": "U001",
+            "tutor": "tutor1",
+            "student": "nicholaswijaya",
             "type": "image",
             "content": "https://www.toter.com/sites/default/files/styles/product_detail/public/2022-08/Toter_64Gallon_TwoWheelCan_Graystone_25564_Main.png?itok=Whjdi_dx",
             "timestamp": "2023-11-21T12:30:45.678Z"
         },
         {
-            "chatID": "AC001",
-            "userID": "U001",
+            "tutor": "tutor1",
+            "student": "nicholaswijaya",
             "type": "file",
             "content": "https://www.firebase.com/example-firebase-storage-link.pdf",
             "timestamp": "2023-11-21T12:30:45.678Z"

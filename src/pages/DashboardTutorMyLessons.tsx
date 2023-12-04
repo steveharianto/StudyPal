@@ -1,5 +1,38 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "@firebase/firestore";
+import db from "../firebase";
+
+type MyClass = {
+    class: {
+        classID: string;
+        tutor: string;
+        student: string;
+        schedule: string[];
+    };
+};
+
+type MyActiveClass = {
+    activeClassID: string;
+    classID: string;
+    schedule: string[];
+    students: string[];
+    chatID: string;
+};
+
 function DashboardTutorMyLessons() {
+    const classCollectionRef = collection(db, "class");
+    const [myClass, setMyClass] = useState<MyClass[]>([]);
+    const [currentClass, setCurrentClass] = useState({});
+    const fetchMyClass = async () => {
+        const getMyClass = await getDocs(query(classCollectionRef, where("tutor", "==", "tutor1")));
+        const myClassList = getMyClass.docs.map((cl) => cl.data() as MyClass);
+        setMyClass(myClassList);
+    };
+
+    useEffect(() => {
+        fetchMyClass();
+    }, []);
+
     // Will be replaced, get data from firebase
     const [users, setUsers] = useState([
         {
@@ -86,7 +119,6 @@ function DashboardTutorMyLessons() {
         dob: "2023-11-21T12:30:45.678Z",
         role: "Tutor",
     });
-    const [currentClass, setCurrentClass] = useState({});
 
     // Main Functions
     const [isModal, setIsModal] = useState(false);
@@ -159,67 +191,41 @@ function DashboardTutorMyLessons() {
             <div className="h-[60vh] mx-16 mt-4">
                 <h2 className="text-2xl font-bold text-blue-600 mb-6">My Lessons</h2>
                 <div className="max-h-[50vh] overflow-auto">
-                    {classes.map(
-                        (lesson) =>
-                            lesson.tutor == currentUser.userID && (
-                                <div
-                                    key={lesson.classID}
-                                    className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4 hover:cursor-pointer"
-                                    onClick={() => {
-                                        setCurrentClass(lesson);
-                                        setIsModal(true);
-                                    }}
-                                >
-                                    <img src={lesson.image} alt="Tutor" className="h-16 w-16 rounded-full" />
-                                    <div>
-                                        <span className="font-semibold text-white text-lg">{lesson.name}</span>
-                                    </div>
-                                </div>
-                            )
-                    )}
-                </div>
-
-                <h2 className="text-2xl font-bold text-blue-600 mb-6">My Live Lessons</h2>
-                <div className="max-h-[50vh] overflow-auto">
-                    {activeClass.map((lesson) => {
-                        const thisClass = classes.find((c) => c.classID === lesson.classID);
-                        const thisStudents = users.filter((user) => lesson.students.includes(user.userID));
-
+                    {myClass.map((lesson) => {
                         const today = new Date().toLocaleString("en-US", { weekday: "short" });
                         const currentTime = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-
-                        const currentDayIndex = thisClass.schedule.findIndex((session) => session.startsWith(today));
-
+                        const currentDayIndex = lesson.schedule.findIndex((session) => session.startsWith(today));
                         let nextSession = " - ";
-
                         if (currentDayIndex !== -1) {
-                            const currentSessionTime = thisClass?.schedule[currentDayIndex].split("-")[1];
+                            const currentSessionTime = lesson?.schedule[currentDayIndex].split("-")[1];
 
                             if (currentTime < currentSessionTime) {
-                                nextSession = thisClass.schedule[currentDayIndex];
+                                nextSession = lesson.schedule[currentDayIndex];
                             } else {
-                                // Find the next session on the next day
-                                const nextDayIndex = (currentDayIndex + 1) % thisClass.schedule.length;
-                                nextSession = thisClass.schedule[nextDayIndex];
+                                const nextDayIndex = (currentDayIndex + 1) % lesson.schedule.length;
+                                nextSession = lesson.schedule[nextDayIndex];
                             }
                         } else {
-                            // If today's session is not in the schedule, return the first session of the schedule
-                            nextSession = thisClass.schedule[0];
+                            nextSession = lesson.schedule[0];
                         }
-
-                        if (thisClass?.tutor == currentUser.userID)
-                            return (
-                                <div key={lesson.classID} className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center justify-between space-x-4 hover:cursor-pointer">
-                                    <div className="flex items-center space-x-4">
-                                        <img src={thisClass.image} alt="Tutor" className="h-16 w-16 rounded-full" />
-                                        <div>
-                                            <span className="font-semibold text-white text-lg">{thisClass.name}</span>
-                                            <span className="block text-gray-200">Next Session : {convertToReadableFormat(nextSession)} </span>
-                                            <span className="block text-gray-200">Students : {thisStudents.map((student) => student.username).join(", ")} </span>
-                                        </div>
+                        return (
+                            <div
+                                key={lesson.classID}
+                                className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4 hover:cursor-pointer"
+                                onClick={() => {
+                                    setCurrentClass(lesson);
+                                    setIsModal(true);
+                                }}
+                            >
+                                <div className="flex items-center space-x-4">
+                                    <img src="/logo.png" alt="Tutor" className="h-16 w-16 rounded-full" />
+                                    <div>
+                                        <span className="font-semibold text-white text-lg">Class with {lesson.student}</span>
+                                        <span className="block text-gray-200">Next Session : {convertToReadableFormat(nextSession)} </span>
                                     </div>
                                 </div>
-                            );
+                            </div>
+                        );
                     })}
                 </div>
             </div>

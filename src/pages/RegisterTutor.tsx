@@ -63,12 +63,23 @@ const schema = Joi.object({
   confirmPassword: Joi.any().equal(Joi.ref("password")).required().messages({
     "any.only": "Passwords do not match",
   }),
+  subject: Joi.string().required().messages({
+    "string.empty": "Subject is required",
+  }),
+  price: Joi.number().min(0).required().messages({
+    "number.base": "Price is required",
+    "number.min": "Price cannot be negative",
+  }),
+  description: Joi.string().max(500).messages({
+    "string.max": "Description must be less than 500 characters long",
+  }),
 });
 
 const RegisterTutor = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [modalContent, setModalContent] = useState("");
+  const [price, setPrice] = useState(10000);
 
   const {
     register,
@@ -117,6 +128,9 @@ const RegisterTutor = () => {
         phoneNumber: data.phoneNumber,
         dob: data.dateOfBirth,
         role: "tutor",
+        subject: data.subject,
+        price: data.price,
+        description: data.description,
         // Consider storing only a hash of the password
         password: data.password,
       });
@@ -133,6 +147,14 @@ const RegisterTutor = () => {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const formatRupiah = (value) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(value);
   };
 
   return (
@@ -302,6 +324,74 @@ const RegisterTutor = () => {
                 </div>
               </div>
 
+              {/* Subject */}
+              <label
+                className="block text-green-600 text-sm font-medium mb-2"
+                htmlFor="subject"
+              >
+                Subject
+              </label>
+              <select
+                id="subject"
+                {...register("subject")}
+                className="mb-1 p-3 w-full rounded border border-green-300 focus:border-green-500 focus:ring focus:ring-green-200 transition duration-200 outline-none"
+              >
+                <option value="English">English</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Communication">Communication</option>
+                <option value="Electrical Engineering">Electrical Engineering</option>
+              </select>
+              {errors.subject && (
+                <p className="text-red-500 text-xs italic mb-5">
+                  {errors.subject.message}
+                </p>
+              )}
+
+              {/* Price */}
+              <label
+                className="block text-green-600 text-sm font-medium mb-2"
+                htmlFor="price"
+              >
+                Price: {formatRupiah(price)}
+              </label>
+              <input
+                id="price"
+                {...register("price")}
+                type="range"
+                min="10000"
+                max="200000"
+                step="1000"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="mb-1 w-full"
+              />
+              {errors.price && (
+                <p className="text-red-500 text-xs italic mb-5">
+                  {errors.price.message}
+                </p>
+              )}
+
+              {/* Description */}
+              <label
+                className="block text-green-600 text-sm font-medium mb-2"
+                htmlFor="description"
+              >
+                Description
+              </label>
+              <textarea
+                id="description"
+                {...register("description")}
+                className="mb-1 p-3 w-full h-32 rounded border border-green-300 focus:border-green-500 focus:ring focus:ring-green-200 transition duration-200 outline-none"
+                placeholder="Enter a description..."
+              ></textarea>
+              {errors.description && (
+                <p className="text-red-500 text-xs italic mb-3">
+                  {errors.description.message}
+                </p>
+              )}
+
               <button
                 type="submit"
                 className="mt-3 w-full py-3 px-6 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition duration-200"
@@ -317,6 +407,7 @@ const RegisterTutor = () => {
                   Go to Login Page
                 </a>
               </div>
+              <div className="mt-5 invisible">a</div>
             </form>
           </div>
         </div>

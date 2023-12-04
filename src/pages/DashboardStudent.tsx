@@ -52,8 +52,8 @@ const DashboardStudent = () => {
         </div>
       </nav>
       <header className="bg-blue-700 py-4 h-[10vh]">
-        <div className="mx-auto px-4">
-          <nav className="flex text-white text-lg justify-between">
+        <div className="h-full mx-auto px-4">
+          <nav className="h-full flex text-white text-lg justify-between items-center">
             <div className="flex space-x-6">
               <Link
                 to="/dashboard-student"

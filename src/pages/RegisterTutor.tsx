@@ -12,6 +12,7 @@ import {
   query,
   where,
 } from "@firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   Dialog,
   DialogContent,
@@ -80,6 +81,7 @@ const RegisterTutor = () => {
   const [open, setOpen] = useState(false);
   const [modalContent, setModalContent] = useState("");
   const [price, setPrice] = useState(10000);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const {
     register,
@@ -102,6 +104,21 @@ const RegisterTutor = () => {
 
     const usernameSnapshot = await getDocs(usernameQuery);
     const emailSnapshot = await getDocs(emailQuery);
+    const storage = getStorage();
+    let imageUrl = "";
+
+    if (selectedImage) {
+      const storageRef = ref(storage, "images/" + selectedImage.name);
+      try {
+        const snapshot = await uploadBytes(storageRef, selectedImage);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      } catch (error) {
+        console.error("Error uploading image: ", error);
+        setModalContent("Error uploading image. Please try again.");
+        setOpen(true);
+        return;
+      }
+    }
 
     if (!usernameSnapshot.empty) {
       setModalContent(
@@ -131,8 +148,8 @@ const RegisterTutor = () => {
         subject: data.subject,
         price: data.price,
         description: data.description,
-        // Consider storing only a hash of the password
-        password: data.password,
+        password: data.password, // Consider storing only a hash of the password
+        imageUrl: imageUrl, // Store the image URL from Firebase Storage
       });
       console.log("User registered successfully");
       navigate("/login");
@@ -145,15 +162,21 @@ const RegisterTutor = () => {
     }
   };
 
+  const handleImageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setSelectedImage(event.target.files[0]);
+    }
+  };
+
   const handleClose = () => {
     setOpen(false);
   };
 
   const formatRupiah = (value) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(value);
   };
 
@@ -341,7 +364,9 @@ const RegisterTutor = () => {
                 <option value="Computer Science">Computer Science</option>
                 <option value="Accounting">Accounting</option>
                 <option value="Communication">Communication</option>
-                <option value="Electrical Engineering">Electrical Engineering</option>
+                <option value="Electrical Engineering">
+                  Electrical Engineering
+                </option>
               </select>
               {errors.subject && (
                 <p className="text-red-500 text-xs italic mb-5">
@@ -390,6 +415,23 @@ const RegisterTutor = () => {
                 <p className="text-red-500 text-xs italic mb-3">
                   {errors.description.message}
                 </p>
+              )}
+
+              {/* Image Upload */}
+              <label className="block text-green-600 text-sm font-medium mb-2">
+                Profile Picture
+              </label>
+              <input
+                type="file"
+                onChange={handleImageChange}
+                className="mb-3 w-full border border-green-300"
+              />
+              {selectedImage && (
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  alt="Selected"
+                  className="mb-3 w-20 h-20 object-cover"
+                />
               )}
 
               <button

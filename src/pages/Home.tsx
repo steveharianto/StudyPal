@@ -9,15 +9,15 @@ const Home: React.FC = () => {
         <div className="container mx-auto">
             <nav className="flex justify-between items-center p-4 shadow-md bg-white">
                 <div className="flex items-center">
-                    <img src="/logo.png" alt="Logo" className="h-8 mr-2" /> {/* Replace with your logo image */}
+                    <img src="/logo.png" alt="Logo" className="mr-1 h-[2.8rem]" /> {/* Replace with your logo image */}
                     <span className="px-4 py-2 text-black text-lg font-bold">Studypal</span>
-                    <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+                    <a href="/" className="px-4 py-2 text-gray-700 hover:text-blue-500">
                         Home
                     </a>
                     <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
                         Find Tutors
                     </a>
-                    <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+                    <a href="/register-tutor" className="px-4 py-2 text-gray-700 hover:text-blue-500">
                         Become a Tutor
                     </a>
                 </div>
@@ -31,7 +31,7 @@ const Home: React.FC = () => {
                 <div className="w-full flex items-center">
                     <div className="w-3/4 mx-auto flex flex-wrap justify-start">
                         <h1 className="text-left font-bold text-4xl mb-5">Unlock Your Learning Potential With The Best Tutors in Indonesia.</h1>
-                        <button className="px-4 py-2 bg-black text-white text-lg rounded-xl">Get Started &#8680;</button>
+                        <Link to="/register-student" className="px-4 py-2 bg-black text-white text-lg rounded-xl">Get Started &#8680;</Link>
                     </div>
                 </div>
                 <div>
@@ -152,7 +152,7 @@ const Home: React.FC = () => {
                             <li>Get paid securely</li>
                         </ul>
                         <button className="bg-black hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 ease-in-out flex items-center">
-                            <span>Become a tutor</span>
+                            <Link to="./register-tutor">Become a tutor</Link>
                             <svg className="ml-3 w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                                 <path d="M5 12h14M12 5l7 7-7 7"></path>
                             </svg>

@@ -24,9 +24,11 @@ import {
 } from "@mui/material";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
 import { useState } from "react";
+import Cookies from 'universal-cookie';
 
 // Joi schema for form validation
 const UsersCollectionRef = collection(db, "users");
+const cookies = new Cookies();
 
 const schema = Joi.object({
   email: Joi.string()
@@ -63,8 +65,24 @@ const Login = () => {
       if (userDoc) {
         const userData = userDoc.data();
         if (userData.role === "student") {
+          cookies.set('user', {
+            email: userData.email,
+            fullname: userData.fullname,
+            username: userData.username,
+            phoneNumber: userData.phoneNumber,
+            dateOfBirth: userData.dateOfBirth,
+            role: userData.role,
+          }, { path: '/' });
           navigate("/dashboard-student");
         } else if (userData.role === "tutor") {
+          cookies.set('user', {
+            email: userData.email,
+            fullname: userData.fullName,
+            username: userData.username,
+            phoneNumber: userData.phoneNumber,
+            dateOfBirth: userData.dateOfBirth,
+            role: userData.role,
+          }, { path: '/' });
           navigate("/dashboard-tutor");
         } else {
           console.log(userData.role)

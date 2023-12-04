@@ -19,7 +19,7 @@ const Home: React.FC = () => {
     <div className="container mx-auto">
       <nav className="flex justify-between items-center p-4 shadow-md bg-white">
         <div className="flex items-center">
-          <img src="/logo.png" alt="Logo" className="h-8 mr-2" />{" "}
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Seal_of_the_Federal_Bureau_of_Investigation.svg/800px-Seal_of_the_Federal_Bureau_of_Investigation.svg.png" alt="Logo" className="h-8 mr-2" />{" "}
           {/* Replace with your logo image */}
           <span className="px-4 py-2 text-black text-lg font-bold">
             Studypal

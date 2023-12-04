@@ -6,9 +6,13 @@ import {
   AiOutlineStar,
   AiOutlineLogout,
 } from "react-icons/ai";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import Cookies from 'universal-cookie';
+
+const cookies = new Cookies();
 
 const DashboardStudent = () => {
+  const navigate = useNavigate();
   return (
     <div className="bg-gray-50 h-screen">
       <nav className="flex justify-between items-center p-4 shadow-md bg-white h-[10vh]">
@@ -52,7 +56,7 @@ const DashboardStudent = () => {
           <nav className="flex text-white text-lg justify-between">
             <div className="flex space-x-6">
               <Link
-                to="/dashboard-student/home"
+                to="/dashboard-student"
                 className="flex items-center space-x-2 hover:text-blue-300"
               >
                 <AiOutlineHome className="text-xl" />
@@ -80,17 +84,24 @@ const DashboardStudent = () => {
                 <span>Settings</span>
               </Link>
             </div>
-            <Link
-              to="/"
+            <button
+              onClick={() => {
+                cookies.remove('user', { path: '/' });
+                navigate('/');
+              }}
               className="flex items-center space-x-2 hover:text-blue-300"
             >
               <AiOutlineLogout className="text-xl" />
               <span>Logout</span>
-            </Link>
+            </button>
           </nav>
         </div>
       </header>
-      <Outlet />
+      <Outlet
+        context={{
+          cookies,
+        }}
+      />
     </div>
   );
 };

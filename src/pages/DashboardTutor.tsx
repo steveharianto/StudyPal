@@ -7,12 +7,13 @@ import {
   AiOutlineLogout,
 } from "react-icons/ai";
 import { CgProfile } from "react-icons/cg";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import Cookies from "universal-cookie";
 
 const cookies = new Cookies();
 
 function DashboardTutor() {
+  const navigate = useNavigate();
   return (
     <div className="bg-gray-50 h-screen">
       <header className="bg-blue-700 py-4 h-[10vh]">
@@ -53,13 +54,16 @@ function DashboardTutor() {
                 <CgProfile className="text-xl" />
                 <span>Profile</span>
               </Link>
-              <Link
-                to="/"
+              <button
+                onClick={() => {
+                  cookies.remove("user", { path: "/" });
+                  navigate("/");
+                }}
                 className="flex items-center space-x-2 hover:text-blue-300"
               >
                 <AiOutlineLogout className="text-xl" />
                 <span>Logout</span>
-              </Link>
+              </button>
             </div>
           </nav>
         </div>

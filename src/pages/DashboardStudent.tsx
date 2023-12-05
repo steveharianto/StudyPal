@@ -20,7 +20,7 @@ const DashboardStudent = () => {
           <img src="/logo.png" alt="Logo" className="h-10" />
           <span className="text-2xl font-bold text-blue-700">Studypal</span>
           <Link
-            to="/find-tutors"
+            to="/find-tutor"
             className="px-3 py-2 text-blue-700 hover:text-blue-800 hover:underline"
           >
             Find Tutors

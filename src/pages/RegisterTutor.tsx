@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Joi from "joi";
 import { joiResolver } from "@hookform/resolvers/joi";
@@ -23,6 +23,9 @@ import {
 import db from "../firebase";
 import image from "../assets/register.jpg"; // Assuming you have a similar image for registration
 import { useNavigate } from "react-router-dom";
+import Cookies from "universal-cookie";
+
+const cookies = new Cookies();
 
 const UsersCollectionRef = collection(db, "users");
 
@@ -183,6 +186,17 @@ const RegisterTutor = () => {
       minimumFractionDigits: 0,
     }).format(value);
   };
+
+  useEffect(() => {
+    const userCookie = cookies.get("user");
+    if (userCookie) {
+      if (userCookie.role == "student") {
+        navigate("/dashboard-student");
+      } else if (userCookie.role == "tutor") {
+        navigate("/dashboard-tutor");
+      }
+    }
+  }, [navigate]);
 
   return (
     <>

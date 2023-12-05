@@ -1,10 +1,26 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebook, faInstagram, faYoutube, faLinkedin, faTiktok } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope, faPhone, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Cookies from 'universal-cookie';
+
+const cookies = new Cookies();
 
 const Home: React.FC = () => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const userCookie = cookies.get("user");
+        if (userCookie) {
+            if(userCookie.role == "student") {
+                navigate("/dashboard-student");
+            } else if(userCookie.role == "tutor") {
+                navigate("/dashboard-tutor");
+            }
+        }
+    }, [navigate]);
+
     return (
         <div className="container mx-auto">
             <nav className="flex justify-between items-center p-4 shadow-md bg-white">
@@ -14,7 +30,7 @@ const Home: React.FC = () => {
                     <a href="/" className="px-4 py-2 text-gray-700 hover:text-blue-500">
                         Home
                     </a>
-                    <a href="#" className="px-4 py-2 text-gray-700 hover:text-blue-500">
+                    <a href="/find-tutor" className="px-4 py-2 text-gray-700 hover:text-blue-500">
                         Find Tutors
                     </a>
                     <a href="/register-tutor" className="px-4 py-2 text-gray-700 hover:text-blue-500">

@@ -9,6 +9,7 @@ import {
   where,
 } from "firebase/firestore";
 import db from "../firebase"; // Import your Firebase config
+import Skeleton from '@mui/material/Skeleton';
 
 const DashboardStudentHome = () => {
   const navigate = useNavigate();
@@ -64,7 +65,10 @@ const DashboardStudentHome = () => {
       const querySnapshot = await getDocs(messagesQuery);
       let fetchedMessages = [];
       querySnapshot.forEach((doc) => {
-        fetchedMessages.push(doc.data());
+        const message = doc.data();
+        // Convert Firestore Timestamp to JavaScript Date object
+        message.timestamp = message.timestamp.toDate();
+        fetchedMessages.push(message);
       });
       setRecentMessages(fetchedMessages);
     } catch (error) {
@@ -97,6 +101,7 @@ const DashboardStudentHome = () => {
   }, []);
 
   useEffect(() => {
+    console.log("Current User:", user);
     if (user && user.username) {
       fetchRecentMessages();
       fetchTutors();
@@ -120,7 +125,8 @@ const DashboardStudentHome = () => {
             Recommended Tutors
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recommendedTutors.map((tutor, index) => (
+            {recommendedTutors.length > 0 ? 
+            (recommendedTutors.map((tutor, index) => (
               <div
                 key={index}
                 className="bg-white p-6 shadow-md rounded-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out"
@@ -138,7 +144,23 @@ const DashboardStudentHome = () => {
                   Price: {formatRupiah(tutor.price)} / Session
                 </p>
               </div>
-            ))}
+            ))) : (
+              // Skeleton loaders
+              Array.from(new Array(3)).map((_, index) => (
+                <div key={index} className="bg-white p-6 shadow-md rounded-lg">
+                  <Skeleton 
+                    variant="rectangular" 
+                    width="100%" 
+                    height={118} 
+                    animation="wave" // Wave animation
+                    sx={{ bgcolor: 'grey.600' }} // Custom background color
+                  />
+                  <Skeleton variant="text" animation="wave" />
+                  <Skeleton variant="text" animation="wave" />
+                  <Skeleton variant="text" animation="wave" />
+                </div>
+              ))
+            )}
           </div>
         </section>
 
@@ -146,7 +168,11 @@ const DashboardStudentHome = () => {
           <h3 className="text-2xl font-bold text-orange-600 mb-6 text-center">
             Recent Messages
           </h3>
-          {recentMessages.length > 0 ? (
+          {!recentMessages ? (
+            <div className="bg-white p-6 shadow-md rounded-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out">
+              <p className="text-gray-700">Loading...</p>
+            </div>
+          ) : recentMessages.length > 0 ? (
             <div className="space-y-4">
               {recentMessages.map((message, index) => (
                 <div

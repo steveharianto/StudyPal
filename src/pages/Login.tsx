@@ -23,8 +23,8 @@ import {
   Button,
 } from "@mui/material";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
-import { useState } from "react";
-import Cookies from 'universal-cookie';
+import { useEffect, useState } from "react";
+import Cookies from "universal-cookie";
 
 // Joi schema for form validation
 const UsersCollectionRef = collection(db, "users");
@@ -65,27 +65,35 @@ const Login = () => {
       if (userDoc) {
         const userData = userDoc.data();
         if (userData.role === "student") {
-          cookies.set('user', {
-            email: userData.email,
-            fullname: userData.fullname,
-            username: userData.username,
-            phoneNumber: userData.phoneNumber,
-            dateOfBirth: userData.dateOfBirth,
-            role: userData.role,
-          }, { path: '/' });
+          cookies.set(
+            "user",
+            {
+              email: userData.email,
+              fullname: userData.fullname,
+              username: userData.username,
+              phoneNumber: userData.phoneNumber,
+              dateOfBirth: userData.dateOfBirth,
+              role: userData.role,
+            },
+            { path: "/" }
+          );
           navigate("/dashboard-student");
         } else if (userData.role === "tutor") {
-          cookies.set('user', {
-            email: userData.email,
-            fullname: userData.fullName,
-            username: userData.username,
-            phoneNumber: userData.phoneNumber,
-            dateOfBirth: userData.dateOfBirth,
-            role: userData.role,
-          }, { path: '/' });
+          cookies.set(
+            "user",
+            {
+              email: userData.email,
+              fullname: userData.fullName,
+              username: userData.username,
+              phoneNumber: userData.phoneNumber,
+              dateOfBirth: userData.dateOfBirth,
+              role: userData.role,
+            },
+            { path: "/" }
+          );
           navigate("/dashboard-tutor");
         } else {
-          console.log(userData.role)
+          console.log(userData.role);
           setModalContent(
             "Internal Server Error, please contact customer service"
           );
@@ -109,6 +117,17 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  useEffect(() => {
+    const userCookie = cookies.get("user");
+    if (userCookie) {
+      if (userCookie.role == "student") {
+        navigate("/dashboard-student");
+      } else if (userCookie.role == "tutor") {
+        navigate("/dashboard-tutor");
+      }
+    }
+  }, [navigate]);
 
   return (
     <>

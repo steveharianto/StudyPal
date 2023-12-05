@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+} from "firebase/firestore";
 import db from "../firebase"; // Import your Firebase config
 
 const DashboardStudentHome = () => {
@@ -8,6 +15,7 @@ const DashboardStudentHome = () => {
   const { cookies } = useOutletContext();
   const [user, setUser] = useState({});
   const [recommendedTutors, setRecommendedTutors] = useState([]);
+  const [recentMessages, setRecentMessages] = useState([]);
 
   const fetchTutors = async () => {
     try {
@@ -23,7 +31,7 @@ const DashboardStudentHome = () => {
       querySnapshot.forEach((doc) => {
         tutors.push(doc.data());
       });
-  
+
       // If there are less than 3 rated tutors, fetch older tutors
       if (tutors.length < 3) {
         const additionalTutorsNeeded = 3 - tutors.length;
@@ -38,32 +46,31 @@ const DashboardStudentHome = () => {
           tutors.push(doc.data());
         });
       }
-  
+
       setRecommendedTutors(tutors);
     } catch (error) {
       console.error("Error fetching tutors: ", error);
     }
   };
 
-  const recentMessages = [
-    {
-      sender: "Instructor Smith",
-      date: "Nov 21, 2023, 10:30 AM",
-      content: "Don't forget to review the latest module on Algebra.",
-    },
-    {
-      sender: "Classmate Jane",
-      date: "Nov 20, 2023, 8:15 PM",
-      content: "Hey, are you joining the group study session tomorrow?",
-    },
-    {
-      sender: "Learning Support",
-      date: "Nov 19, 2023, 3:45 PM",
-      content:
-        "Your request for additional resources has been approved. Check your email for details.",
-    },
-    // Add more messages as needed
-  ];
+  const fetchRecentMessages = async () => {
+    try {
+      const messagesQuery = query(
+        collection(db, "messages"), // Assuming 'messages' is your collection
+        where("receiver", "==", user.username), // Filter messages for the logged-in user
+        orderBy("timestamp", "desc"), // Order by timestamp
+        limit(5) // Limit the number of messages
+      );
+      const querySnapshot = await getDocs(messagesQuery);
+      let fetchedMessages = [];
+      querySnapshot.forEach((doc) => {
+        fetchedMessages.push(doc.data());
+      });
+      setRecentMessages(fetchedMessages);
+    } catch (error) {
+      console.error("Error fetching recent messages: ", error);
+    }
+  };
 
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
@@ -87,9 +94,14 @@ const DashboardStudentHome = () => {
     } else {
       navigate("/");
     }
-
-    fetchTutors();
   }, []);
+
+  useEffect(() => {
+    if (user && user.username) {
+      fetchRecentMessages();
+      fetchTutors();
+    }
+  }, [user]);
 
   return (
     <>
@@ -122,7 +134,9 @@ const DashboardStudentHome = () => {
                   {tutor.fullname}
                 </h4>
                 <p className="text-gray-700">Subject: {tutor.subject}</p>
-                <p className="text-gray-700">Price: {formatRupiah(tutor.price)} / Session</p>
+                <p className="text-gray-700">
+                  Price: {formatRupiah(tutor.price)} / Session
+                </p>
               </div>
             ))}
           </div>
@@ -141,7 +155,9 @@ const DashboardStudentHome = () => {
                 >
                   <p className="text-gray-800 font-semibold">
                     {message.sender} -{" "}
-                    <span className="text-gray-700">{message.date}</span>
+                    <span className="text-gray-700">
+                      {new Date(message.timestamp).toLocaleString()}
+                    </span>
                   </p>
                   <p className="text-gray-700 mt-2">{message.content}</p>
                 </div>

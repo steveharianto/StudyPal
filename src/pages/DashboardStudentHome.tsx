@@ -1,35 +1,49 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
+import db from "../firebase"; // Import your Firebase config
 
 const DashboardStudentHome = () => {
   const navigate = useNavigate();
   const { cookies } = useOutletContext();
   const [user, setUser] = useState({});
+  const [recommendedTutors, setRecommendedTutors] = useState([]);
 
-  const recommendedTutors = [
-    {
-      name: "Mr. Johnson",
-      subject: "Mathematics",
-      price: "$40/hour",
-      imageUrl:
-        "https://thefutureispublictransport.org/wp-content/uploads/2022/09/Story-C40-SiteImage_04.jpg",
-    },
-    {
-      name: "Ms. Davis",
-      subject: "Physics",
-      price: "$35/hour",
-      imageUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Megawati_Sukarnoputri_official_portrait.jpg/735px-Megawati_Sukarnoputri_official_portrait.jpg",
-    },
-    {
-      name: "Dr. Thompson",
-      subject: "Chemistry",
-      price: "$45/hour",
-      imageUrl:
-        "https://asset.kompas.com/crops/A0qds-2BjWmU4g8xkkxJANW0Zmo=/0x0:0x0/750x500/data/photo/2022/10/24/635673c468c46.jpg",
-    },
-    // Add more tutors and lessons as needed
-  ];
+  const fetchTutors = async () => {
+    try {
+      // Query for the highest-rated tutors who are also tutors by role
+      const ratedTutorsQuery = query(
+        collection(db, "users"),
+        where("role", "==", "tutor"),
+        orderBy("rating", "desc"),
+        limit(3)
+      );
+      const querySnapshot = await getDocs(ratedTutorsQuery);
+      let tutors = [];
+      querySnapshot.forEach((doc) => {
+        tutors.push(doc.data());
+      });
+  
+      // If there are less than 3 rated tutors, fetch older tutors
+      if (tutors.length < 3) {
+        const additionalTutorsNeeded = 3 - tutors.length;
+        const olderTutorsQuery = query(
+          collection(db, "users"),
+          where("role", "==", "tutor"),
+          orderBy("dob"),
+          limit(additionalTutorsNeeded)
+        );
+        const ageQuerySnapshot = await getDocs(olderTutorsQuery);
+        ageQuerySnapshot.forEach((doc) => {
+          tutors.push(doc.data());
+        });
+      }
+  
+      setRecommendedTutors(tutors);
+    } catch (error) {
+      console.error("Error fetching tutors: ", error);
+    }
+  };
 
   const recentMessages = [
     {
@@ -52,10 +66,10 @@ const DashboardStudentHome = () => {
   ];
 
   const formatRupiah = (value) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(value);
   };
 
@@ -69,11 +83,13 @@ const DashboardStudentHome = () => {
         role: userCookie.role,
         dateOfBirth: userCookie.dateOfBirth,
         phoneNumber: userCookie.phoneNumber,
-      })
+      });
     } else {
-      navigate('/');
+      navigate("/");
     }
-  }, [])
+
+    fetchTutors();
+  }, []);
 
   return (
     <>
@@ -99,14 +115,14 @@ const DashboardStudentHome = () => {
               >
                 <img
                   src={tutor.imageUrl}
-                  alt={`Image of ${tutor.name}`}
+                  alt={`Image of ${tutor.fullname}`}
                   className="w-full h-60 object-cover rounded-lg mb-4"
                 />
                 <h4 className="font-semibold text-lg text-green-600 mb-2">
-                  {tutor.name}
+                  {tutor.fullname}
                 </h4>
                 <p className="text-gray-700">Subject: {tutor.subject}</p>
-                <p className="text-gray-700">Price: {tutor.price}</p>
+                <p className="text-gray-700">Price: {formatRupiah(tutor.price)} / Session</p>
               </div>
             ))}
           </div>
@@ -136,25 +152,6 @@ const DashboardStudentHome = () => {
               <p className="text-gray-700">No new messages.</p>
             </div>
           )}
-        </section>
-
-        <section className="text-center">
-          <h3 className="text-2xl font-bold text-teal-700 mb-6">Quick Links</h3>
-          <div className="flex justify-center flex-wrap gap-4">
-            <a
-              href="#"
-              className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-3 rounded-lg hover:bg-gradient-to-l transition-colors duration-300 ease-in-out"
-            >
-              Link 1
-            </a>
-            <a
-              href="#"
-              className="bg-gradient-to-r from-pink-500 to-orange-400 text-white px-6 py-3 rounded-lg hover:bg-gradient-to-l transition-colors duration-300 ease-in-out"
-            >
-              Link 2
-            </a>
-            {/* Add more links as needed */}
-          </div>
         </section>
       </main>
     </>

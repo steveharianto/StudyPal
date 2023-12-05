@@ -76,13 +76,6 @@ const DashboardStudent = () => {
                 <AiOutlineBook className="text-xl" />
                 <span>My Lessons</span>
               </Link>
-              <Link
-                to="/settings"
-                className="flex items-center space-x-2 hover:text-blue-300"
-              >
-                <AiOutlineSetting className="text-xl" />
-                <span>Settings</span>
-              </Link>
             </div>
             <button
               onClick={() => {

@@ -104,21 +104,6 @@ const RegisterTutor = () => {
 
     const usernameSnapshot = await getDocs(usernameQuery);
     const emailSnapshot = await getDocs(emailQuery);
-    const storage = getStorage();
-    let imageUrl = "";
-
-    if (selectedImage) {
-      const storageRef = ref(storage, "images/" + selectedImage.name);
-      try {
-        const snapshot = await uploadBytes(storageRef, selectedImage);
-        imageUrl = await getDownloadURL(snapshot.ref);
-      } catch (error) {
-        console.error("Error uploading image: ", error);
-        setModalContent("Error uploading image. Please try again.");
-        setOpen(true);
-        return;
-      }
-    }
 
     if (!usernameSnapshot.empty) {
       setModalContent(
@@ -136,9 +121,28 @@ const RegisterTutor = () => {
       return;
     }
 
+    let imageUrl = "";
+
+    if (selectedImage) {
+      const storage = getStorage();
+      // Use the username as the file name for the image
+      const imageRef = ref(storage, `images/${data.username}`);
+
+      try {
+        const snapshot = await uploadBytes(imageRef, selectedImage);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      } catch (error) {
+        console.error("Error uploading image: ", error);
+        setModalContent("Error uploading image. Please try again.");
+        setOpen(true);
+        return;
+      }
+    }
+
     // If username and email are unique, proceed with registration
     try {
       await addDoc(UsersCollectionRef, {
+        // ... other data fields
         fullname: data.fullname,
         username: data.username,
         email: data.email,
@@ -149,7 +153,7 @@ const RegisterTutor = () => {
         price: data.price,
         description: data.description,
         password: data.password, // Consider storing only a hash of the password
-        imageUrl: imageUrl, // Store the image URL from Firebase Storage
+        imageUrl: imageUrl, // Store the image URL with the username
       });
       console.log("User registered successfully");
       navigate("/login");

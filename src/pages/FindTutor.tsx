@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 import db from "../firebase";
+import Cookies from "universal-cookie";
+import { useNavigate } from "react-router-dom";
 
 const FindTutor = () => {
+    const navigate = useNavigate();
     // Main Variables
     const [tutors, setTutors] = useState([]);
     const [classes, setClasses] = useState([]);
@@ -13,6 +16,7 @@ const FindTutor = () => {
 
     const [currentCategory, setCurrentCategory] = useState("ui/ux design");
     const [currentTutor, setCurrentTutor] = useState({});
+    const [currentUser, setCurrentUser] = useState(null);
     const [selectedSchedule, setSelectedSchedule] = useState([]);
     const [selectedOption, setSelectedOption] = useState("");
 
@@ -44,8 +48,18 @@ const FindTutor = () => {
         });
         setRating(temprating);
     };
+    const fetchCurrentUser = () => {
+        const cookies = new Cookies();
+        const userCookie = cookies.get("user");
+
+        console.log(userCookie);
+        if (userCookie) {
+            setCurrentUser(userCookie);
+        }
+    };
 
     useEffect(() => {
+        fetchCurrentUser();
         fetchTutors();
         fetchClasses();
         fetchrating();
@@ -54,6 +68,12 @@ const FindTutor = () => {
     // Functions
     const handleSelectChange = (event) => {
         setSelectedOption(event.target.value);
+    };
+
+    const handleCheckoutButton = () => {
+        if (Object.keys(currentUser).length == 0) {
+            navigate("/login");
+        }
     };
 
     const toggleSchedule = (day, time) => {
@@ -238,8 +258,17 @@ const FindTutor = () => {
                                 </thead>
                                 <tbody className="text-xs text-center text-gray-500 select-none">{generateTableRows()}</tbody>
                             </table>
-                            <div> Total Price : Rp. {(selectedSchedule.length * currentTutor.price).toLocaleString()}</div>
-                            <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-[50%]">Checkout</button>
+                            <div className={`${selectedSchedule.length * currentTutor.price != 0 && currentUser && (currentUser?.balance >= selectedSchedule.length * currentTutor.price ? "text-green-400" : "text-red-400")}`}> Total Price : Rp. {(selectedSchedule.length * currentTutor.price).toLocaleString()}</div>
+                            <button
+                                className={`transition mt-4  py-2 px-4 rounded  w-[50%] ${selectedSchedule.length * currentTutor.price != 0 && currentUser?.balance >= selectedSchedule.length * currentTutor.price ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-200 text-gray-500"}`}
+                                onClick={() => {
+                                    if (selectedSchedule.length * currentTutor.price != 0) {
+                                        handleCheckoutButton();
+                                    }
+                                }}
+                            >
+                                Checkout
+                            </button>
                         </div>
                     </div>
                 </div>

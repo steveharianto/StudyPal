@@ -95,7 +95,6 @@ const RegisterStudent = () => {
                 phoneNumber: data.phoneNumber,
                 dob: data.dateOfBirth,
                 role: "student",
-                // Consider storing only a hash of the password
                 password: data.password,
                 balance: 0,
             });

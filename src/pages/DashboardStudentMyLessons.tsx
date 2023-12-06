@@ -1,67 +1,168 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { Paper, Typography } from "@mui/material";
 
-// Updated mock data
-const mockUpcomingLessons = [
-    { id: 1, title: 'Mathematics 101', date: '2023-11-25', day: 'Saturday', tutorName: 'John Doe', tutorImage: '/path/to/math-tutor.jpg' },
-    { id: 2, title: 'History of Art', date: '2023-11-26', day: 'Sunday', tutorName: 'Jane Smith', tutorImage: '/path/to/art-tutor.jpg' },
-    { id: 2, title: 'History of Art', date: '2023-11-26', day: 'Sunday', tutorName: 'Jane Smith', tutorImage: '/path/to/art-tutor.jpg' },
-    { id: 2, title: 'History of Art', date: '2023-11-26', day: 'Sunday', tutorName: 'Jane Smith', tutorImage: '/path/to/art-tutor.jpg' },
-    // ... other lessons
+const mockClasses = [
+  {
+    classID: "MATH101",
+    schedule: ["2023-11-25T09:00:00"],
+    student: "nicholasWijaya",
+    tutor: "JohnDoe",
+  },
+  {
+    classID: "ART102",
+    schedule: ["2023-11-26T14:00:00"],
+    student: "nicholasWijaya",
+    tutor: "JaneSmith",
+  },
+  {
+    classID: "BIO103",
+    schedule: ["2023-11-20T11:00:00"],
+    student: "nicholasWijaya",
+    tutor: "AliceJohnson",
+  },
+  {
+    classID: "PHYS104",
+    schedule: ["2023-10-19T15:00:00", "2023-12-19T15:00:00"],
+    student: "nicholasWijaya",
+    tutor: "BobBrown",
+  },
+  // ... other classes
 ];
 
-const mockLessonHistory = [
-    { id: 1, title: 'Biology Basics', date: '2023-11-20', day: 'Monday', tutorName: 'Alice Johnson', tutorImage: '/path/to/biology-tutor.jpg' },
-    { id: 2, title: 'Introduction to Physics', date: '2023-11-19', day: 'Sunday', tutorName: 'Bob Brown', tutorImage: '/path/to/physics-tutor.jpg' },
-    { id: 2, title: 'Introduction to Physics', date: '2023-11-19', day: 'Sunday', tutorName: 'Bob Brown', tutorImage: '/path/to/physics-tutor.jpg' },
-    { id: 2, title: 'Introduction to Physics', date: '2023-11-19', day: 'Sunday', tutorName: 'Bob Brown', tutorImage: '/path/to/physics-tutor.jpg' },
-    { id: 2, title: 'Introduction to Physics', date: '2023-11-19', day: 'Sunday', tutorName: 'Bob Brown', tutorImage: '/path/to/physics-tutor.jpg' },
-    // ... other lessons
-];
+const DashboardStudentMyClasses = () => {
+  const navigate = useNavigate();
+  const { cookies } = useOutletContext();
+  const [user, setUser] = useState({});
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
+  const [classHistory, setClassHistory] = useState([]);
 
-const DashboardStudentMyLessons = () => {
-    const [upcomingLessons, setUpcomingLessons] = useState([]);
-    const [lessonHistory, setLessonHistory] = useState([]);
+  useEffect(() => {
+    const userCookie = cookies.get("user");
+    if (userCookie) {
+      setUser({
+        username: userCookie.username,
+        fullname: userCookie.fullname,
+        email: userCookie.email,
+        role: userCookie.role,
+        dateOfBirth: userCookie.dateOfBirth,
+        phoneNumber: userCookie.phoneNumber,
+      });
 
-    useEffect(() => {
-        setUpcomingLessons(mockUpcomingLessons);
-        setLessonHistory(mockLessonHistory);
-    }, []);
+      const now = new Date();
+      let allSchedules = [];
 
-    return (
-        <div className="container mx-auto p-4 h-4/5 flex flex-col space-y-6 h-[80vh]">
-            <div className="h-[60vh]">
-                <h2 className="text-2xl font-bold text-blue-600 mb-6">Upcoming Lessons</h2>
-                <div className='h-[50vh] overflow-auto'>
-                    {upcomingLessons.map(lesson => (
-                        <div key={lesson.id} className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4">
-                            <img src={lesson.tutorImage} alt="Tutor" className="h-16 w-16 rounded-full" />
-                            <div>
-                                <span className="font-semibold text-white text-lg">{lesson.title}</span>
-                                <span className="block text-gray-200">{`${lesson.day}, ${lesson.date}`}</span>
-                                <span className="block text-gray-200">{`Tutor: ${lesson.tutorName}`}</span>
-                            </div>
-                        </div>
-                    ))}
+      mockClasses.forEach((classItem) => {
+        if (classItem.student === userCookie.username) {
+          classItem.schedule.forEach((date) => {
+            allSchedules.push({
+              ...classItem,
+              schedule: date,
+            });
+          });
+        }
+      });
+
+      const sortedUpcomingClasses = allSchedules.filter(
+        (item) => new Date(item.schedule) > now
+      );
+      const sortedClassHistory = allSchedules.filter(
+        (item) => new Date(item.schedule) <= now
+      );
+
+      setUpcomingClasses(sortedUpcomingClasses);
+      setClassHistory(sortedClassHistory);
+    } else {
+      navigate("/");
+    }
+  }, []);
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return `${date.toDateString()}, ${date.toLocaleTimeString()}`;
+  };
+
+  return (
+    <div className="container mx-auto p-4 h-4/5 flex flex-col space-y-6 h-[80vh]">
+      {/* Upcoming Classes Section */}
+      <div className="flex flex-col flex-grow">
+        <h2 className="text-2xl font-bold text-blue-600 mb-6">
+          Upcoming Classes
+        </h2>
+        <div className="max-h-[50vh] overflow-auto flex-grow">
+          {upcomingClasses.length > 0 ? (
+            upcomingClasses.map((classItem) => (
+              <div
+                key={classItem.classID}
+                className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4"
+              >
+                {/* Replace tutorImage with a placeholder or fetch from a URL based on tutor's username */}
+                <img
+                  src={`/path/to/tutor/${classItem.tutor}.jpg`}
+                  alt="Tutor"
+                  className="h-16 w-16 rounded-full"
+                />
+                <div>
+                  <span className="font-semibold text-white text-lg">
+                    {classItem.classID}
+                  </span>
+                  <span className="block text-gray-200">
+                    {formatDate(classItem.schedule)}
+                  </span>
+                  <span className="block text-gray-200">{`Tutor: ${classItem.tutor}`}</span>
                 </div>
-            </div>
-
-            <div className="h-[60vh]">
-                <h2 className="text-2xl font-bold text-green-600 mb-6">Lesson History</h2>
-                <div className='h-[50vh] overflow-auto mb-10'>
-                    {lessonHistory.map(lesson => (
-                        <div key={lesson.id} className="mb-4 bg-gradient-to-r from-indigo-500 to-blue-500 shadow-lg rounded-lg p-4 flex items-center space-x-4">
-                            <img src={lesson.tutorImage} alt="Tutor" className="h-16 w-16 rounded-full" />
-                            <div>
-                                <span className="font-semibold text-white text-lg">{lesson.title}</span>
-                                <span className="block text-gray-200">{`${lesson.day}, ${lesson.date}`}</span>
-                                <span className="block text-gray-200">{`Tutor: ${lesson.tutorName}`}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+              </div>
+            ))
+          ) : (
+            <Paper elevation={3} className="p-4">
+              <Typography variant="h6" color="textSecondary">
+                No upcoming classes scheduled.
+              </Typography>
+            </Paper>
+          )}
         </div>
-    );
-}
+      </div>
 
-export default DashboardStudentMyLessons;
+      {/* Class History Section */}
+      <div className="flex flex-col flex-grow">
+        <h2 className="text-2xl font-bold text-green-600 mb-6">
+          Class History
+        </h2>
+        <div className="max-h-[50vh] overflow-auto mb-10 flex-grow">
+          {classHistory.length > 0 ? (
+            classHistory.map((classItem) => (
+              <div
+                key={classItem.classID}
+                className="mb-4 bg-gradient-to-r from-indigo-500 to-blue-500 shadow-lg rounded-lg p-4 flex items-center space-x-4"
+              >
+                {/* Replace tutorImage with a placeholder or fetch from a URL based on tutor's username */}
+                <img
+                  src={`/path/to/tutor/${classItem.tutor}.jpg`}
+                  alt="Tutor"
+                  className="h-16 w-16 rounded-full"
+                />
+                <div>
+                  <span className="font-semibold text-white text-lg">
+                    {classItem.classID}
+                  </span>
+                  <span className="block text-gray-200">
+                    {formatDate(classItem.schedule)}
+                  </span>
+                  <span className="block text-gray-200">{`Tutor: ${classItem.tutor}`}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <Paper elevation={3} className="p-4">
+              <Typography variant="h6" color="textSecondary">
+                You have no class history.
+              </Typography>
+            </Paper>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardStudentMyClasses;

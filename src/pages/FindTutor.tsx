@@ -73,7 +73,10 @@ const FindTutor = () => {
   };
 
   const fetchClasses = async () => {
-    const getClassesQuery = query(collection(db, "class"));
+    console.log(currentTutor)
+    const getClassesQuery = query(
+      collection(db, "class"),
+    );
     const classesSnapshot = await getDocs(getClassesQuery);
     let tempclass = [];
     classesSnapshot.forEach((doc) => {

@@ -1,34 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { Paper, Typography } from "@mui/material";
-
-const mockClasses = [
-  {
-    classID: "MATH101",
-    schedule: ["2023-11-25T09:00:00"],
-    student: "nicholasWijaya",
-    tutor: "JohnDoe",
-  },
-  {
-    classID: "ART102",
-    schedule: ["2023-11-26T14:00:00"],
-    student: "nicholasWijaya",
-    tutor: "JaneSmith",
-  },
-  {
-    classID: "BIO103",
-    schedule: ["2023-11-20T11:00:00"],
-    student: "nicholasWijaya",
-    tutor: "AliceJohnson",
-  },
-  {
-    classID: "PHYS104",
-    schedule: ["2023-10-19T15:00:00", "2023-12-19T15:00:00"],
-    student: "nicholasWijaya",
-    tutor: "BobBrown",
-  },
-  // ... other classes
-];
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import db from '../firebase'; // Adjust this import based on your Firebase configuration file's location
 
 const DashboardStudentMyClasses = () => {
   const navigate = useNavigate();
@@ -38,8 +12,13 @@ const DashboardStudentMyClasses = () => {
   const [classHistory, setClassHistory] = useState([]);
 
   useEffect(() => {
-    const userCookie = cookies.get("user");
-    if (userCookie) {
+    const fetchClasses = async () => {
+      const userCookie = cookies.get("user");
+      if (!userCookie) {
+        navigate("/");
+        return;
+      }
+
       setUser({
         username: userCookie.username,
         fullname: userCookie.fullname,
@@ -49,36 +28,39 @@ const DashboardStudentMyClasses = () => {
         phoneNumber: userCookie.phoneNumber,
       });
 
-      const now = new Date();
-      let allSchedules = [];
+      const classesRef = collection(db, "class"); // Adjust "classes" to your collection name
+      const q = query(classesRef, where("student", "==", userCookie.username));
+      const querySnapshot = await getDocs(q);
 
-      mockClasses.forEach((classItem) => {
-        if (classItem.student === userCookie.username) {
-          classItem.schedule.forEach((date) => {
-            allSchedules.push({
-              ...classItem,
-              schedule: date,
-            });
+      let allSchedules = [];
+      const now = new Date();
+
+      querySnapshot.forEach((doc) => {
+        const classData = doc.data();
+        classData.schedule.forEach((timestamp) => {
+          const scheduleDate = timestamp.toDate(); // Convert Firestore timestamp to JavaScript Date
+          allSchedules.push({
+            ...classData,
+            schedule: scheduleDate,
           });
-        }
+        });
       });
 
       const sortedUpcomingClasses = allSchedules.filter(
-        (item) => new Date(item.schedule) > now
+        (item) => item.schedule > now
       );
       const sortedClassHistory = allSchedules.filter(
-        (item) => new Date(item.schedule) <= now
+        (item) => item.schedule <= now
       );
 
       setUpcomingClasses(sortedUpcomingClasses);
       setClassHistory(sortedClassHistory);
-    } else {
-      navigate("/");
-    }
-  }, []);
+    };
 
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
+    fetchClasses();
+  }, [navigate, cookies]);
+
+  const formatDate = (date) => {
     return `${date.toDateString()}, ${date.toLocaleTimeString()}`;
   };
 

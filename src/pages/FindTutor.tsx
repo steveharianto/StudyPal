@@ -154,14 +154,14 @@ const FindTutor = () => {
   const generateTableHeader = () => {
     const weekDates = getWeekDates();
     const dayLabels = getDayLabels();
-  
+
     return (
       <tr>
         {weekDates.map((date, index) => {
           const label = dayLabels[index];
           const hasAvailableClass = isClassAvailableOnDay(date);
           const highlightClass = hasAvailableClass ? "bg-green-200" : ""; // You can customize this class as needed
-  
+
           return (
             <th key={index} className={`w-[6em] ${highlightClass}`}>
               {label}
@@ -177,9 +177,27 @@ const FindTutor = () => {
     dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(dayStart);
     dayEnd.setDate(dayEnd.getDate() + 1);
-  
+
     return currentTutor.schedule.some((scheduleDate) => {
       return scheduleDate >= dayStart && scheduleDate < dayEnd;
+    });
+  };
+
+  const isClassScheduled = (date, hour) => {
+    const hourInt = parseInt(hour, 10);
+
+    return classes.some((cls) => {
+      return cls.schedule.some((scheduledTimestamp) => {
+        // Convert the Firebase timestamp to a JavaScript Date object
+        const scheduledDate = new Date(scheduledTimestamp.seconds * 1000);
+
+        return (
+          scheduledDate.getDate() === date.getDate() &&
+          scheduledDate.getMonth() === date.getMonth() &&
+          scheduledDate.getFullYear() === date.getFullYear() &&
+          scheduledDate.getHours() === hourInt
+        );
+      });
     });
   };
 
@@ -199,46 +217,55 @@ const FindTutor = () => {
   // Adjusted function to generate table rows
   const generateTableRows = () => {
     const weekDates = getWeekDates();
-
     return timeIntervals.map((interval, index) => {
-        const startHour = interval.split(" - ")[0];
-        return (
-            <tr key={index} className="text-white">
-                {weekDates.map((date, idx) => {
-                    const scheduleItem = `${date.toISOString().split('T')[0]}T${startHour}:00:00`;
-                    const isAvailable = isTutorAvailable(date, startHour);
-                    const isSelected = selectedSchedule.includes(scheduleItem);
+      const startHour = interval.split(" - ")[0];
+      return (
+        <tr key={index} className="text-white">
+          {weekDates.map((date, idx) => {
+            const scheduleItem = `${
+              date.toISOString().split("T")[0]
+            }T${startHour}:00:00`;
+            const isAvailable = isTutorAvailable(date, startHour);
+            const isSelected = selectedSchedule.includes(scheduleItem);
+            const isScheduledClass = isClassScheduled(date, startHour);
 
-                    const baseClass = "rounded transition text-gray-500";
-                    let cellClass = "";
+            const baseClass = "rounded transition";
+            let cellClass = "";
 
-                    if (isAvailable) {
-                        cellClass += " bg-blue-200 hover:bg-blue-300 cursor-pointer"; // Highlight for available time slots
-                        if (isSelected) {
-                            cellClass += " bg-blue-500 text-white"; // Different highlight if selected
-                        }
-                    } else {
-                        cellClass += " hover:bg-gray-300 cursor-not-allowed";
-                    }
+            // First, check if the class is scheduled (highest priority)
+            if (isScheduledClass) {
+              cellClass = "bg-red-500 text-white"; // Highlight the cell in red
+            }
+            // Then check for availability
+            else if (isAvailable) {
+              cellClass = "bg-blue-200 hover:bg-blue-300 cursor-pointer"; // Highlight for available time slots
+              if (isSelected) {
+                cellClass = "bg-blue-500 text-white"; // Different highlight if selected
+              }
+            }
+            // Default case
+            else {
+              cellClass = "text-gray-500 hover:bg-gray-300 cursor-not-allowed";
+            }
 
-                    return (
-                        <td
-                            key={idx}
-                            className={`${baseClass} ${cellClass}`}
-                            onClick={() => {
-                                if (isAvailable) {
-                                    toggleSchedule(scheduleItem);
-                                }
-                            }}
-                        >
-                            {interval}
-                        </td>
-                    );
-                })}
-            </tr>
-        );
+            return (
+              <td
+                key={idx}
+                className={`${baseClass} ${cellClass}`}
+                onClick={() => {
+                  if (isAvailable && !isScheduledClass) {
+                    toggleSchedule(scheduleItem);
+                  }
+                }}
+              >
+                {interval}
+              </td>
+            );
+          })}
+        </tr>
+      );
     });
-};
+  };
 
   return (
     <>

@@ -133,6 +133,7 @@ const RegisterTutor = () => {
                 password: data.password, // Consider storing only a hash of the password
                 imageUrl: imageUrl, // Store the image URL with the username
                 schedule: [],
+                balance: 0,
             });
             console.log("User registered successfully");
             navigate("/login");

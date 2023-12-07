@@ -2,48 +2,46 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import Cookies from "universal-cookie";
 import db from "../firebase";
-import { ratingClasses } from "@mui/material";
+import { Classes, Rating, User } from "../Types";
 
 function DashboardTutorHome() {
     const cookies = new Cookies();
-    const [currentUser, setCurrentUser] = useState(null);
-    const [classes, setClasses] = useState([]);
-    const [rating, setRating] = useState([]);
+    const userCookie = cookies.get("user");
+
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [classes, setClasses] = useState<Classes[]>([]);
+    const [rating, setRating] = useState<Rating[]>([]);
     const [earnings, setEarnings] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchCurrentUser = () => {
-        const userCookie = cookies.get("user");
-
         if (userCookie) {
             setCurrentUser(userCookie);
         }
     };
     const fetchClasses = async () => {
-        const userCookie = cookies.get("user");
-        const getClassesQuery = query(collection(db, "class"), where("tutor", "==", userCookie.username));
-        const classesSnapshot = await getDocs(getClassesQuery);
-        let tempclass = [];
+        const classesSnapshot = await getDocs(query(collection(db, "class"), where("tutor", "==", userCookie.username)));
+        const tempClass: Classes[] = [];
         let totalEarnings = 0;
-        classesSnapshot.forEach((doc) => {
-            const classData = doc.data();
-            tempclass.push(classData);
 
-            // Calculate cost for this class and add it to totalCost
+        classesSnapshot.forEach((doc) => {
+            const classData = doc.data() as Classes;
+            tempClass.push(classData);
+
+            // Calculate Total Earnings
             totalEarnings += classData.schedule.length * userCookie.price;
         });
-        setClasses(tempclass);
+
+        setClasses(tempClass);
         setEarnings(totalEarnings);
     };
     const fetchrating = async () => {
-        const userCookie = cookies.get("user");
-        const getRatingQuery = query(collection(db, "rating"), where("tutor", "==", userCookie.username));
-        const ratingSnapshot = await getDocs(getRatingQuery);
-        let temprating = [];
+        const ratingSnapshot = await getDocs(query(collection(db, "rating"), where("tutor", "==", userCookie.username)));
+        const tempRating: Rating[] = [];
         ratingSnapshot.forEach((doc) => {
-            temprating.push(doc.data());
+            tempRating.push(doc.data() as Rating);
         });
-        setRating(temprating);
+        setRating(tempRating);
     };
 
     useEffect(() => {

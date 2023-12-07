@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   collection,
@@ -12,7 +12,16 @@ import {
   getDoc,
 } from "firebase/firestore";
 import db from "../firebase"; // Import your Firebase config
-import { Container, Box, TextField, Button, Typography, Divider, Skeleton } from '@mui/material';
+import {
+  Container,
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Divider,
+  Skeleton,
+} from "@mui/material";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const DashboardStudentHome = () => {
   const navigate = useNavigate();
@@ -21,6 +30,7 @@ const DashboardStudentHome = () => {
   const [recommendedTutors, setRecommendedTutors] = useState([]);
   const [recentMessages, setRecentMessages] = useState([]);
   const [topUpAmount, setTopUpAmount] = useState(0);
+  const topUpAmountRef = useRef(topUpAmount);
 
   const fetchTutors = async () => {
     try {
@@ -80,46 +90,49 @@ const DashboardStudentHome = () => {
     }
   };
 
-  const handleTopUp = async () => {
-    if (topUpAmount <= 0) {
+  const handleTopUp = async (newBalance) => {
+    if (newBalance <= 0) {
       alert("Please enter a valid amount to top up.");
       return;
     }
-  
+
     // Ensure that the user's data is available
     if (!user || !user.username) {
       alert("User information is not available.");
       return;
     }
-  
+
     try {
       // Query for the user document by username
-      const userQuery = query(collection(db, "users"), where("username", "==", user.username));
+      const userQuery = query(
+        collection(db, "users"),
+        where("username", "==", user.username)
+      );
       const querySnapshot = await getDocs(userQuery);
-  
+
       if (querySnapshot.empty) {
         alert("User not found.");
         return;
       }
-  
+
       // Assuming only one document will be returned for a unique username
       const userDocRef = querySnapshot.docs[0].ref;
-  
+
       const currentUserData = querySnapshot.docs[0].data();
-      const updatedBalance = (currentUserData.balance || 0) + topUpAmount;
-  
+      const updatedBalance = newBalance;
+
       // Update the user document with the new balance
       await updateDoc(userDocRef, {
         balance: updatedBalance,
       });
-  
+
       // Update the local state to reflect the new balance
       setUser({ ...user, balance: updatedBalance });
-  
+
       // Optionally, update the cookie with the new balance
-      cookies.set("user", { ...user, balance: updatedBalance }, { path: '/' });
+      cookies.set("user", { ...user, balance: updatedBalance }, { path: "/" });
       setBalance(updatedBalance);
-  
+
       setTopUpAmount(0);
       alert("Top up successful!");
     } catch (error) {
@@ -127,7 +140,6 @@ const DashboardStudentHome = () => {
       alert("Failed to top up balance.");
     }
   };
-  
 
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
@@ -153,6 +165,10 @@ const DashboardStudentHome = () => {
       navigate("/");
     }
   }, []);
+  
+  useEffect(() => {
+    topUpAmountRef.current = topUpAmount;
+  }, [topUpAmount]);
 
   useEffect(() => {
     if (user && user.username) {
@@ -251,40 +267,61 @@ const DashboardStudentHome = () => {
           )}
         </section>
 
-        <Container maxWidth="sm" sx={{ mt: 4 }}>
-          <Box
-            sx={{
-              bgcolor: 'white',
-              boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
-              borderRadius: 2,
-              p: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <Typography variant="h5" component="h3" sx={{ mb: 2, fontWeight: 'bold', color: 'teal' }}>
-              Top Up Balance
-            </Typography>
-            <Divider sx={{ width: '100%', mb: 3 }} />
-            <TextField
-              label="Enter Amount"
-              variant="outlined"
-              type="number"
-              value={topUpAmount}
-              onChange={(e) => setTopUpAmount(Number(e.target.value))}
-              sx={{ width: '100%', mb: 2 }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleTopUp}
-              sx={{ width: '100%' }}
-            >
-              Top Up
-            </Button>
-          </Box>
-        </Container>
+        <PayPalScriptProvider
+          options={{
+            "client-id": "Ac-x8-sk6tmBazXGaoRvziAn8tgimUUz-Iz3fx3v7leJA3QoGcWOMBHQzbA_PxS2PBoPilUx5jPUSpRy",
+          }}
+        >
+          <Container maxWidth="sm" sx={{ mt: 4 }}>
+            <Box>
+              <Typography
+                variant="h5"
+                component="h3"
+                sx={{ mb: 2, fontWeight: "bold", color: "teal" }}
+              >
+                Top Up Balance
+              </Typography>
+              <Divider sx={{ width: "100%", mb: 3 }} />
+              <TextField
+                label="Enter Amount"
+                variant="outlined"
+                type="number"
+                value={topUpAmount}
+                onChange={(e) => setTopUpAmount(Number(e.target.value))}
+                sx={{ width: "100%", mb: 2 }}
+              />
+              <PayPalButtons
+                createOrder={(data, actions) => {
+                  const formattedAmount = parseFloat(topUpAmountRef.current).toFixed(2);
+                  if (formattedAmount <= 0) {
+                    alert("Please enter a valid amount to top up.");
+                    return Promise.reject(new Error("Invalid amount"));
+                  }
+                  return actions.order.create({
+                    purchase_units: [
+                      {
+                        amount: {
+                          value: formattedAmount,
+                        },
+                      },
+                    ],
+                  });
+                }}
+                onApprove={(data, actions) => {
+                  return actions.order.capture().then((details) => {
+                    console.log("Transaction completed by " + details.payer.name.given_name);
+                    const newBalance = user.balance + topUpAmountRef.current; // Use ref value here
+                    console.log(newBalance)
+                    handleTopUp(newBalance);
+                  });
+                }}
+                onError={(error) => {
+                  console.error("PayPal Button Error:", error);
+                }}
+              />
+            </Box>
+          </Container>
+        </PayPalScriptProvider>
       </main>
     </>
   );

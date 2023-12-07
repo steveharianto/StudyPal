@@ -16,6 +16,7 @@ import DashboardTutorHome from "./pages/DashboardTutorHome";
 import DashboardTutorMessages from "./pages/DashboardTutorMessages";
 import DashboardTutorMyLessons from "./pages/DashboardTutorMyLessons";
 import DashboardTutorProfile from "./pages/DashboardTutorProfile";
+import { BalanceProvider } from './BalanceContext';
 
 const router = createBrowserRouter([
     {
@@ -87,4 +88,8 @@ const router = createBrowserRouter([
     },
 ]);
 
-ReactDOM.createRoot(document.getElementById("root")).render(<RouterProvider router={router} />);
+ReactDOM.createRoot(document.getElementById("root")).render(
+    <BalanceProvider>
+        <RouterProvider router={router} />
+    </BalanceProvider>
+);

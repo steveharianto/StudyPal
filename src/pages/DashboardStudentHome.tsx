@@ -7,16 +7,20 @@ import {
   limit,
   getDocs,
   where,
+  doc,
+  updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import db from "../firebase"; // Import your Firebase config
-import Skeleton from '@mui/material/Skeleton';
+import { Container, Box, TextField, Button, Typography, Divider, Skeleton } from '@mui/material';
 
 const DashboardStudentHome = () => {
   const navigate = useNavigate();
-  const { cookies } = useOutletContext();
+  const { cookies, setBalance } = useOutletContext();
   const [user, setUser] = useState({});
   const [recommendedTutors, setRecommendedTutors] = useState([]);
   const [recentMessages, setRecentMessages] = useState([]);
+  const [topUpAmount, setTopUpAmount] = useState(0);
 
   const fetchTutors = async () => {
     try {
@@ -76,6 +80,55 @@ const DashboardStudentHome = () => {
     }
   };
 
+  const handleTopUp = async () => {
+    if (topUpAmount <= 0) {
+      alert("Please enter a valid amount to top up.");
+      return;
+    }
+  
+    // Ensure that the user's data is available
+    if (!user || !user.username) {
+      alert("User information is not available.");
+      return;
+    }
+  
+    try {
+      // Query for the user document by username
+      const userQuery = query(collection(db, "users"), where("username", "==", user.username));
+      const querySnapshot = await getDocs(userQuery);
+  
+      if (querySnapshot.empty) {
+        alert("User not found.");
+        return;
+      }
+  
+      // Assuming only one document will be returned for a unique username
+      const userDocRef = querySnapshot.docs[0].ref;
+  
+      const currentUserData = querySnapshot.docs[0].data();
+      const updatedBalance = (currentUserData.balance || 0) + topUpAmount;
+  
+      // Update the user document with the new balance
+      await updateDoc(userDocRef, {
+        balance: updatedBalance,
+      });
+  
+      // Update the local state to reflect the new balance
+      setUser({ ...user, balance: updatedBalance });
+  
+      // Optionally, update the cookie with the new balance
+      cookies.set("user", { ...user, balance: updatedBalance }, { path: '/' });
+      setBalance(updatedBalance);
+  
+      setTopUpAmount(0);
+      alert("Top up successful!");
+    } catch (error) {
+      console.error("Error updating balance: ", error);
+      alert("Failed to top up balance.");
+    }
+  };
+  
+
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -94,6 +147,7 @@ const DashboardStudentHome = () => {
         role: userCookie.role,
         dateOfBirth: userCookie.dateOfBirth,
         phoneNumber: userCookie.phoneNumber,
+        balance: userCookie.balance,
       });
     } else {
       navigate("/");
@@ -101,7 +155,6 @@ const DashboardStudentHome = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Current User:", user);
     if (user && user.username) {
       fetchRecentMessages();
       fetchTutors();
@@ -125,42 +178,44 @@ const DashboardStudentHome = () => {
             Recommended Tutors
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recommendedTutors.length > 0 ? 
-            (recommendedTutors.map((tutor, index) => (
-              <div
-                key={index}
-                className="bg-white p-6 shadow-md rounded-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out"
-              >
-                <img
-                  src={tutor.imageUrl}
-                  alt={`Image of ${tutor.fullname}`}
-                  className="w-full h-60 object-cover rounded-lg mb-4"
-                />
-                <h4 className="font-semibold text-lg text-green-600 mb-2">
-                  {tutor.fullname}
-                </h4>
-                <p className="text-gray-700">Subject: {tutor.subject}</p>
-                <p className="text-gray-700">
-                  Price: {formatRupiah(tutor.price)} / Session
-                </p>
-              </div>
-            ))) : (
-              // Skeleton loaders
-              Array.from(new Array(3)).map((_, index) => (
-                <div key={index} className="bg-white p-6 shadow-md rounded-lg">
-                  <Skeleton 
-                    variant="rectangular" 
-                    width="100%" 
-                    height={200} 
-                    animation="wave" // Wave animation
-                    sx={{ bgcolor: 'grey.600' }} // Custom background color
-                  />
-                  <Skeleton variant="text" animation="wave" />
-                  <Skeleton variant="text" animation="wave" />
-                  <Skeleton variant="text" animation="wave" />
-                </div>
-              ))
-            )}
+            {recommendedTutors.length > 0
+              ? recommendedTutors.map((tutor, index) => (
+                  <div
+                    key={index}
+                    className="bg-white p-6 shadow-md rounded-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out"
+                  >
+                    <img
+                      src={tutor.imageUrl}
+                      alt={`Image of ${tutor.fullname}`}
+                      className="w-full h-60 object-cover rounded-lg mb-4"
+                    />
+                    <h4 className="font-semibold text-lg text-green-600 mb-2">
+                      {tutor.fullname}
+                    </h4>
+                    <p className="text-gray-700">Subject: {tutor.subject}</p>
+                    <p className="text-gray-700">
+                      Price: {formatRupiah(tutor.price)} / Session
+                    </p>
+                  </div>
+                ))
+              : // Skeleton loaders
+                Array.from(new Array(3)).map((_, index) => (
+                  <div
+                    key={index}
+                    className="bg-white p-6 shadow-md rounded-lg"
+                  >
+                    <Skeleton
+                      variant="rectangular"
+                      width="100%"
+                      height={200}
+                      animation="wave" // Wave animation
+                      sx={{ bgcolor: "grey.600" }} // Custom background color
+                    />
+                    <Skeleton variant="text" animation="wave" />
+                    <Skeleton variant="text" animation="wave" />
+                    <Skeleton variant="text" animation="wave" />
+                  </div>
+                ))}
           </div>
         </section>
 
@@ -195,6 +250,41 @@ const DashboardStudentHome = () => {
             </div>
           )}
         </section>
+
+        <Container maxWidth="sm" sx={{ mt: 4 }}>
+          <Box
+            sx={{
+              bgcolor: 'white',
+              boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
+              borderRadius: 2,
+              p: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <Typography variant="h5" component="h3" sx={{ mb: 2, fontWeight: 'bold', color: 'teal' }}>
+              Top Up Balance
+            </Typography>
+            <Divider sx={{ width: '100%', mb: 3 }} />
+            <TextField
+              label="Enter Amount"
+              variant="outlined"
+              type="number"
+              value={topUpAmount}
+              onChange={(e) => setTopUpAmount(Number(e.target.value))}
+              sx={{ width: '100%', mb: 2 }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleTopUp}
+              sx={{ width: '100%' }}
+            >
+              Top Up
+            </Button>
+          </Box>
+        </Container>
       </main>
     </>
   );

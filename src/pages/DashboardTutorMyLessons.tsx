@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "@firebase/firestore";
 import db from "../firebase";
+import Cookies from "universal-cookie";
 
 type MyClass = {
     class: {
@@ -20,16 +21,84 @@ type MyActiveClass = {
 };
 
 function DashboardTutorMyLessons() {
+    const cookies = new Cookies();
+
     const classCollectionRef = collection(db, "class");
     const [myClass, setMyClass] = useState<MyClass[]>([]);
     const [currentClass, setCurrentClass] = useState({});
+    const [currentUser, setCurrentUser] = useState({});
     const fetchMyClass = async () => {
-        const getMyClass = await getDocs(query(classCollectionRef, where("tutor", "==", "tutor1")));
-        const myClassList = getMyClass.docs.map((cl) => cl.data() as MyClass);
+        const userCookie = cookies.get("user");
+        const getMyClass = await getDocs(query(classCollectionRef, where("tutor", "==", userCookie.username)));
+        let myClassList = getMyClass.docs.map((cl) => cl.data() as MyClass);
+
+        myClassList = myClassList.map((lesson) => {
+            const now = new Date();
+            const options = { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" };
+            const sortedTimestamps = lesson.schedule
+                .map((timestamp) => timestamp.toDate()) // Convert Firestore Timestamp to JavaScript Date
+                .sort((a, b) => a - b); // Sort in ascending order
+
+            let nextTimestamp = null;
+            for (const t of sortedTimestamps) {
+                if (t > now) {
+                    nextTimestamp = new Date(t);
+                    break;
+                }
+            }
+            let nextSession = "No upcoming timestamp found";
+
+            if (nextTimestamp) {
+                const formattedTimestamp = nextTimestamp.toLocaleDateString("en-US", options);
+                nextSession = formattedTimestamp;
+            }
+            return { ...lesson, nextSession };
+        });
+
+        function parseDate(dateString) {
+            // Split the string into parts
+            const parts = dateString.split(" at ");
+            const datePart = parts[0];
+            const timePart = parts[1];
+
+            // Use the Date constructor to parse the date part
+            const date = new Date(datePart);
+
+            // Parse the time part
+            const time = timePart.match(/(\d+):(\d+) (AM|PM)/);
+            let hour = parseInt(time[1]);
+            const minute = parseInt(time[2]);
+            const period = time[3];
+
+            // Adjust the hour if it's PM
+            if (period === "PM" && hour !== 12) {
+                hour += 12;
+            }
+
+            // Set the time components in the Date object
+            date.setHours(hour, minute);
+
+            return date;
+        }
+
+        myClassList.sort((a, b) => {
+            const dateA = a.nextSession === "No upcoming timestamp found" ? new Date() : new Date(parseDate(a.nextSession)); // Convert nextSession to a Date object
+            const dateB = b.nextSession === "No upcoming timestamp found" ? new Date() : new Date(parseDate(b.nextSession)); // Convert nextSession to a Date object
+            return dateA - dateB;
+        });
+
         setMyClass(myClassList);
+    };
+    const fetchCurrentUser = () => {
+        const userCookie = cookies.get("user");
+
+        if (userCookie) {
+            setCurrentUser(userCookie);
+        }
     };
 
     useEffect(() => {
+        fetchCurrentUser();
         fetchMyClass();
     }, []);
 
@@ -111,15 +180,6 @@ function DashboardTutorMyLessons() {
         },
     ]);
 
-    const [currentUser, setCurrentUser] = useState({
-        userID: "U002",
-        username: "Username2",
-        email: "user2@gmail.com",
-        password: "pass0002",
-        dob: "2023-11-21T12:30:45.678Z",
-        role: "Tutor",
-    });
-
     // Main Functions
     const [isModal, setIsModal] = useState(false);
 
@@ -189,43 +249,54 @@ function DashboardTutorMyLessons() {
     return (
         <>
             <div className="h-[60vh] mx-16 mt-4">
-                <h2 className="text-2xl font-bold text-blue-600 mb-6">My Lessons</h2>
+                <h2 className="text-2xl font-bold text-blue-600 mb-6">Upcomming Classes</h2>
                 <div className="max-h-[50vh] overflow-auto">
                     {myClass.map((lesson) => {
-                        const today = new Date().toLocaleString("en-US", { weekday: "short" });
-                        const currentTime = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-                        const currentDayIndex = lesson.schedule.findIndex((session) => session.startsWith(today));
-                        let nextSession = " - ";
-                        if (currentDayIndex !== -1) {
-                            const currentSessionTime = lesson?.schedule[currentDayIndex].split("-")[1];
-
-                            if (currentTime < currentSessionTime) {
-                                nextSession = lesson.schedule[currentDayIndex];
-                            } else {
-                                const nextDayIndex = (currentDayIndex + 1) % lesson.schedule.length;
-                                nextSession = lesson.schedule[nextDayIndex];
-                            }
-                        } else {
-                            nextSession = lesson.schedule[0];
-                        }
-                        return (
-                            <div
-                                key={lesson.classID}
-                                className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4 hover:cursor-pointer"
-                                onClick={() => {
-                                    setCurrentClass(lesson);
-                                    setIsModal(true);
-                                }}
-                            >
-                                <div className="flex items-center space-x-4">
-                                    <img src="/logo.png" alt="Tutor" className="h-16 w-16 rounded-full" />
-                                    <div>
-                                        <span className="font-semibold text-white text-lg">Class with {lesson.student}</span>
-                                        <span className="block text-gray-200">Next Session : {convertToReadableFormat(nextSession)} </span>
+                        if (lesson.nextSession !== "No upcoming timestamp found") {
+                            return (
+                                <div
+                                    key={lesson.id}
+                                    className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4 hover:cursor-pointer"
+                                    onClick={() => {
+                                        setCurrentClass(lesson);
+                                        setIsModal(true);
+                                    }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <img src="/logo.png" alt="Tutor" className="h-16 w-16 rounded-full" />
+                                        <div>
+                                            <span className="font-semibold text-white text-lg">Class with {lesson.student}</span>
+                                            <span className="block text-gray-200">Next Session : {lesson.nextSession}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
+                            );
+                        }
+                    })}
+                </div>
+                <h2 className="text-2xl font-bold text-green-600 mb-6">Class History</h2>
+                <div className="max-h-[50vh] overflow-auto">
+                    {myClass.map((lesson) => {
+                        if (lesson.nextSession === "No upcoming timestamp found") {
+                            return (
+                                <div
+                                    key={lesson.id}
+                                    className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4 hover:cursor-pointer"
+                                    onClick={() => {
+                                        setCurrentClass(lesson);
+                                        setIsModal(true);
+                                    }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <img src="/logo.png" alt="Tutor" className="h-16 w-16 rounded-full" />
+                                        <div>
+                                            <span className="font-semibold text-white text-lg">Class with {lesson.student}</span>
+                                            <span className="block text-gray-200"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
                     })}
                 </div>
             </div>

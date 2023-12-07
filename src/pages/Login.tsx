@@ -65,11 +65,12 @@ const Login = () => {
                         "user",
                         {
                             email: userData.email,
-                            fullname: userData.fullName,
+                            fullname: userData.fullname,
                             username: userData.username,
                             phoneNumber: userData.phoneNumber,
-                            dateOfBirth: userData.dateOfBirth,
+                            dob: userData.dob,
                             role: userData.role,
+                            price: userData.price,
                         },
                         { path: "/" }
                     );

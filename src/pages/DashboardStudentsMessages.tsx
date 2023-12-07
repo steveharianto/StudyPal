@@ -60,6 +60,7 @@ const DashboardStudentMessages = () => {
         role: userCookie.role,
         dateOfBirth: userCookie.dateOfBirth,
         phoneNumber: userCookie.phoneNumber,
+        balance: userCookie.balance,
       });
 
       // Fetch chats where the user is firstPerson

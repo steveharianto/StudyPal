@@ -75,7 +75,7 @@ const FindTutor = () => {
     };
 
     const handleCheckoutButton = async (price) => {
-        if (Object.keys(currentUser).length == 0) {
+        if (currentUser == null) {
             navigate("/login");
             return;
         }

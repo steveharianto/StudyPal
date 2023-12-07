@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   AiOutlineHome,
   AiOutlineMessage,
@@ -8,11 +9,44 @@ import {
 } from "react-icons/ai";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import Cookies from 'universal-cookie';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import db from '../firebase';
 
 const cookies = new Cookies();
 
 const DashboardStudent = () => {
   const navigate = useNavigate();
+  const [balance, setBalance] = useState(0);
+  const userCookie = cookies.get("user");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userCookie) {
+        navigate("/");
+        return;
+      }
+
+      const usersRef = collection(db, "users"); // Adjust "users" to your collection name if different
+      const q = query(usersRef, where("username", "==", userCookie.username));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        setBalance(userData.balance || 0);
+      }
+    };
+
+    fetchUserData();
+  }, [navigate, userCookie]);
+
+  const formatRupiah = (value) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
   return (
     <div className="bg-gray-50 h-screen">
       <nav className="flex justify-between items-center p-4 shadow-md bg-white h-[10vh]">
@@ -38,7 +72,7 @@ const DashboardStudent = () => {
             >
               {/* SVG Path */}
             </svg>
-            <span className="ml-2 text-gray-700">Balance: 0 Hours</span>
+            <span className="ml-2 text-gray-700">Balance: {formatRupiah(balance)}</span>
           </div>
           <div className="flex items-center">
             <AiOutlineStar className="w-6 h-6 text-yellow-500" />
@@ -92,7 +126,7 @@ const DashboardStudent = () => {
       </header>
       <Outlet
         context={{
-          cookies,
+          cookies, setBalance
         }}
       />
     </div>

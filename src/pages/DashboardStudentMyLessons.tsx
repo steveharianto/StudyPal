@@ -26,6 +26,7 @@ const DashboardStudentMyClasses = () => {
                 role: userCookie.role,
                 dateOfBirth: userCookie.dateOfBirth,
                 phoneNumber: userCookie.phoneNumber,
+                balance: userCookie.balance,
             });
 
             const classesRef = collection(db, 'class');

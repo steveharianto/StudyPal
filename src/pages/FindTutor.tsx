@@ -159,15 +159,17 @@ const FindTutor = () => {
     const generateTableRows = () => {
         const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         const datesOfWeek = currentTutor ? getCurrentWeekSchedule(currentTutor.schedule) : [];
-        console.log(datesOfWeek);
-        const filteredDatesOfWeek = datesOfWeek.filter((date) => {
-            // Check if the date is not in any of the schedules with tutor equal to currentTutor.username
-            return !classes.some((classItem) => {
-                if (classItem.tutor === currentTutor?.username) {
-                    return classItem.schedule.some((timestamp) => timestamp.toDate() === date);
-                }
-                return false;
-            });
+        const filteredDatesOfWeek: Date[] = [];
+        classes.forEach((classItem) => {
+            if (classItem.tutor === currentTutor?.username) {
+                classItem.schedule.forEach((classTimestamp) => {
+                    datesOfWeek.forEach((dateOfWeek) => {
+                        if (classTimestamp.toDate().toString() === dateOfWeek.toString()) {
+                            filteredDatesOfWeek.push(dateOfWeek);
+                        }
+                    });
+                });
+            }
         });
         console.log(filteredDatesOfWeek);
 
@@ -181,10 +183,6 @@ const FindTutor = () => {
                     // console.log(convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
                     // const isAlreadyOrdered = filteredDatesOfWeek.some((timestamp) => timestamp === convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
 
-                    console.log(isAlreadyOrdered);
-                    if (`${day}-${interval.split(" - ")[0].split(":")[0]}` === "Mon-19") {
-                        console.log(convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
-                    }
                     let currentStyle = "";
 
                     if (isInTutorSchedule) {

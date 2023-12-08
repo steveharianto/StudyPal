@@ -8,6 +8,7 @@ import { parseDate } from "../utils";
 function DashboardTutorMyLessons() {
     const cookies = new Cookies();
     const userCookie = cookies.get("user");
+    const now = new Date();
     const classCollectionRef = collection(db, "class");
     const timeIntervals = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"];
 
@@ -159,44 +160,49 @@ function DashboardTutorMyLessons() {
             </div>
             {isModal && (
                 <div className="fixed inset-0 flex items-center justify-center">
-                    <div className="bg-white w-[70em] h-[40em] p-4 rounded-lg shadow-lg flex justify-between overflow-y-auto">
+                    <div className="bg-white w-[70em] h-[35em] p-4 rounded-lg shadow-lg flex justify-between overflow-y-auto">
                         <div className="flex flex-col w-[30%] h-full justify-between">
                             <div>
-                                <div className="rounded-lg h-[55%]">
-                                    <img src={currentClass.image} alt="" className="object-cover h-full w-full rounded-t-lg" />
-                                </div>
-                                <h2 className="text-xl font-semibold mb-1">{currentClass.name} </h2>
-                                <div className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[0.75em] rounded-md h-fit w-fit my-auto">{currentClass.tag}</div>
-                                <p className="text-gray-700 text-sm mt-4">{currentClass.description}</p>
+                                <img src="/tutor_placeholder_image.jpeg" alt="Tutor" className="w-full object-cover rounded-xl shadow-md aspect-[1/1]" />
+                                <p className="font-bold text-xl text-center mt-2">{currentClass.student}</p>
+                                <p>
+                                    Finished Class : {currentClass.schedule.filter((timestamp) => timestamp.toDate() < now).length} / {currentClass.schedule.length}
+                                </p>
+                            </div>
+                            <div>
+                                <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600  w-full ">Chat with Student</button>
                             </div>
                             <div>
                                 <button
-                                    className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                                    className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
                                     onClick={() => {
                                         setIsModal(false);
                                     }}
                                 >
                                     Close
                                 </button>
-                                <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 ms-4">Edit Lesson</button>
                             </div>
                         </div>
-                        <div className="flex flex-col w-[70%] justify-between">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th className="w-[6em]">Monday</th>
-                                        <th className="w-[6em]">Tuesday</th>
-                                        <th className="w-[6em]">Wednesday</th>
-                                        <th className="w-[6em]">Thursday</th>
-                                        <th className="w-[6em]">Friday</th>
-                                        <th className="w-[6em]">Saturday</th>
-                                        <th className="w-[6em]">Sunday</th>
-                                    </tr>
-                                </thead>
-                                {/* <tbody className="text-xs text-center text-gray-500 select-none">{generateTableRows()}</tbody> */}
-                            </table>
-                            <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-[50%]">Save Schedule</button>
+                        <div className=" px-4 flex flex-col w-[70%] justify-between">
+                            <p className="font-bold text-xl text-blue-500">All Upcoming Sessions</p>
+                            {currentClass.schedule.filter((timestamp) => timestamp.toDate() > now).length == 0 ? (
+                                <div className=" w-full h-full flex items-center justify-center">
+                                    <p className="text-xl">All Sessions Completed!</p>
+                                </div>
+                            ) : (
+                                <div className=" w-full h-full flex flex-col">
+                                    {currentClass.schedule.map((c, index) => {
+                                        const now = new Date();
+                                        if (c.toDate() > now) {
+                                            return (
+                                                <div key={index} className="w-full h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg my-2 flex items-center px-4">
+                                                    <p className="block text-gray-200">{c.toDate().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                                                </div>
+                                            );
+                                        }
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

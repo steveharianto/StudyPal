@@ -10,10 +10,9 @@ function DashboardTutorMyLessons() {
     const userCookie = cookies.get("user");
     const now = new Date();
     const classCollectionRef = collection(db, "class");
-    const timeIntervals = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"];
 
     const [myClass, setMyClass] = useState<MyClass[]>([]);
-    const [currentClass, setCurrentClass] = useState<MyClass>(null);
+    const [currentClass, setCurrentClass] = useState<MyClass | null>(null);
     const [currentUser, setCurrentUser] = useState<User>();
 
     const [isModal, setIsModal] = useState(false);
@@ -88,6 +87,7 @@ function DashboardTutorMyLessons() {
     // Generate Time Table
     // const generateTableRows = () => {
     //     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    //     const timeIntervals = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"];
 
     //     const generateTd = (day: string, interval: string) => {
     //         const time = interval.split(" - ")[0].split(":")[0];

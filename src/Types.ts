@@ -1,7 +1,7 @@
 import { Timestamp } from "@firebase/firestore";
 
 export type Classes = {
-    schedule: [];
+    schedule: Timestamp[];
     student: string;
     tutor: string;
 };
@@ -25,4 +25,19 @@ export type User = {
     phoneNumber: string;
     balance: number;
     dob: Timestamp;
+};
+
+export type Tutor = {
+    username: string;
+    password: string;
+    fullname: string;
+    email: string;
+    role: string; // student | tutor
+    phoneNumber: string;
+    balance: number;
+    dob: Timestamp;
+    description: string;
+    imageUrl: string;
+    price: number;
+    schedule: string[];
 };

@@ -1,62 +1,59 @@
-import { useEffect, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import { collection, query, orderBy, limit, getDocs, where, addDoc, updateDoc, doc } from "firebase/firestore";
 import db from "../firebase";
 import Cookies from "universal-cookie";
 import { useNavigate } from "react-router-dom";
+import { User, Classes, Rating, Tutor } from "../Types";
+import { getCurrentWeekSchedule, convertTimeStringToTimestamp } from "../utils";
 
 const FindTutor = () => {
     const navigate = useNavigate();
     const currentDate = new Date();
     const cookies = new Cookies();
+    const userCookie = cookies.get("user");
 
     const ClassCollectionRef = collection(db, "class");
     const UsersCollectionRef = collection(db, "users");
     // Main Variables
-    const [tutors, setTutors] = useState([]);
-    const [classes, setClasses] = useState([]);
-    const [rating, setRating] = useState([]);
+    const [tutors, setTutors] = useState<Tutor[]>([]);
+    const [classes, setClasses] = useState<Classes[]>([]);
+    const [rating, setRating] = useState<Rating[]>([]);
 
     const [isModal, setIsModal] = useState(false);
-    const [timeIntervals, setTimeIntervals] = useState(["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"]);
+    const timeIntervals = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"];
 
     const [currentCategory, setCurrentCategory] = useState("ui/ux design");
-    const [currentTutor, setCurrentTutor] = useState({});
-    const [currentUser, setCurrentUser] = useState(null);
-    const [currentSchedule, setCurrentSchedule] = useState([]);
-    const [selectedSchedule, setSelectedSchedule] = useState([]);
+    const [currentTutor, setCurrentTutor] = useState<Tutor>();
+    const [currentUser, setCurrentUser] = useState<User>();
+    const [selectedSchedule, setSelectedSchedule] = useState<string[]>([]);
     const [selectedOption, setSelectedOption] = useState("");
 
     // Fetches
     const fetchTutors = async () => {
-        const getTutorsQuery = query(collection(db, "users"), where("role", "==", "tutor"));
-        const tutorSnapshot = await getDocs(getTutorsQuery);
-        let temptutors = [];
+        const tutorSnapshot = await getDocs(query(collection(db, "users"), where("role", "==", "tutor")));
+        const tempTutors: Tutor[] = [];
         tutorSnapshot.forEach((doc) => {
-            temptutors.push(doc.data());
+            tempTutors.push(doc.data() as Tutor);
         });
-        setTutors(temptutors);
+        setTutors(tempTutors);
     };
     const fetchClasses = async () => {
-        const getClassesQuery = query(collection(db, "class"));
-        const classesSnapshot = await getDocs(getClassesQuery);
-        let tempclass = [];
+        const classesSnapshot = await getDocs(query(collection(db, "class")));
+        const tempClass: Classes[] = [];
         classesSnapshot.forEach((doc) => {
-            tempclass.push(doc.data());
+            tempClass.push(doc.data() as Classes);
         });
-        setClasses(tempclass);
+        setClasses(tempClass);
     };
     const fetchrating = async () => {
-        const getRatingQuery = query(collection(db, "rating"));
-        const ratingSnapshot = await getDocs(getRatingQuery);
-        let temprating = [];
+        const ratingSnapshot = await getDocs(query(collection(db, "rating")));
+        const tempRating: Rating[] = [];
         ratingSnapshot.forEach((doc) => {
-            temprating.push(doc.data());
+            tempRating.push(doc.data() as Rating);
         });
-        setRating(temprating);
+        setRating(tempRating);
     };
     const fetchCurrentUser = () => {
-        const userCookie = cookies.get("user");
-
         if (userCookie) {
             setCurrentUser(userCookie);
         }
@@ -70,28 +67,30 @@ const FindTutor = () => {
     }, []);
 
     // Functions
-    const handleSelectChange = (event) => {
+    const handleSelectChange = (event: { target: { value: SetStateAction<string> } }) => {
         setSelectedOption(event.target.value);
     };
 
-    const handleCheckoutButton = async (price) => {
+    const handleCheckoutButton = async (price: number) => {
+        // is Logged in?
         if (currentUser == null) {
             navigate("/login");
             return;
         }
+        // Enough Balance?
         if (currentUser.balance < price) {
             alert("insufficient balance");
             return;
         }
+        // Add Class
         await addDoc(ClassCollectionRef, {
             schedule: getCurrentWeekSchedule(selectedSchedule),
             student: currentUser.username,
-            tutor: currentTutor.username,
+            tutor: currentTutor?.username,
         });
 
         // Take Balance
-        const userQuery = query(UsersCollectionRef, where("username", "==", currentUser.username));
-        getDocs(userQuery)
+        getDocs(query(UsersCollectionRef, where("username", "==", currentUser.username)))
             .then((querySnapshot) => {
                 if (!querySnapshot.empty) {
                     const userDoc = querySnapshot.docs[0];
@@ -124,7 +123,7 @@ const FindTutor = () => {
             });
     };
 
-    const toggleSchedule = (day, time) => {
+    const toggleSchedule = (day: string, time: string) => {
         const scheduleItem = `${day}-${time}`;
         if (selectedSchedule.includes(scheduleItem)) {
             // If it's already in the schedule, remove it
@@ -135,7 +134,7 @@ const FindTutor = () => {
         }
     };
 
-    const generateHeader = (currentDate) => {
+    const generateHeader = (currentDate: Date) => {
         // Calculate the start of the current week (Sunday as the first day)
         const startOfWeek = new Date(currentDate);
         startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 7);
@@ -157,86 +156,116 @@ const FindTutor = () => {
 
         return <tr>{daysOfWeek}</tr>;
     };
-
-    function getCurrentWeekSchedule(schedule) {
-        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const currentDate = new Date();
-        const startOfWeek = new Date(currentDate);
-        startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 7);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-        const timestamps = [];
-
-        schedule.forEach((item) => {
-            const [day, hour] = item.split("-");
-            const dayIndex = daysOfWeek.indexOf(day);
-            const timestamp = new Date(startOfWeek);
-            timestamp.setDate(startOfWeek.getDate() + dayIndex);
-            timestamp.setHours(hour);
-            timestamp.setMinutes(0);
-            timestamp.setSeconds(0);
-
-            if (timestamp >= startOfWeek && timestamp <= endOfWeek) {
-                timestamps.push(timestamp);
-            }
-        });
-
-        return timestamps;
-    }
-
     const generateTableRows = () => {
+        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const datesOfWeek = currentTutor ? getCurrentWeekSchedule(currentTutor.schedule) : [];
+        console.log(datesOfWeek);
+        const filteredDatesOfWeek = datesOfWeek.filter((date) => {
+            // Check if the date is not in any of the schedules with tutor equal to currentTutor.username
+            return !classes.some((classItem) => {
+                if (classItem.tutor === currentTutor?.username) {
+                    return classItem.schedule.some((timestamp) => timestamp.toDate() === date);
+                }
+                return false;
+            });
+        });
+        console.log(filteredDatesOfWeek);
+
         return timeIntervals.map((interval, index) => (
             <tr key={index} className="text-white">
-                <td
-                    className={currentTutor.schedule.includes(`Mon-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Mon-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
-                    onClick={() => {
-                        currentTutor.schedule.includes(`Mon-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Mon", interval.split(" - ")[0].split(":")[0]);
-                    }}
-                >
-                    {interval}
-                </td>
-                <td
-                    className={currentTutor.schedule.includes(`Tue-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Tue-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
-                    onClick={() => {
-                        currentTutor.schedule.includes(`Tue-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Tue", interval.split(" - ")[0].split(":")[0]);
-                    }}
-                >
-                    {interval}
-                </td>
-                <td
-                    className={currentTutor.schedule.includes(`Wed-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Wed-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
-                    onClick={() => currentTutor.schedule.includes(`Wed-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Wed", interval.split(" - ")[0].split(":")[0])}
-                >
-                    {interval}
-                </td>
-                <td
-                    className={currentTutor.schedule.includes(`Thu-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Thu-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
-                    onClick={() => currentTutor.schedule.includes(`Thu-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Thu", interval.split(" - ")[0].split(":")[0])}
-                >
-                    {interval}
-                </td>
-                <td
-                    className={currentTutor.schedule.includes(`Fri-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Fri-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
-                    onClick={() => currentTutor.schedule.includes(`Fri-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Fri", interval.split(" - ")[0].split(":")[0])}
-                >
-                    {interval}
-                </td>
-                <td
-                    className={currentTutor.schedule.includes(`Sat-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Sat-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
-                    onClick={() => currentTutor.schedule.includes(`Sat-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Sat", interval.split(" - ")[0].split(":")[0])}
-                >
-                    {interval}
-                </td>
-                <td
-                    className={currentTutor.schedule.includes(`Sun-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Sun-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
-                    onClick={() => currentTutor.schedule.includes(`Sun-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Sun", interval.split(" - ")[0].split(":")[0])}
-                >
-                    {interval}
-                </td>
+                {daysOfWeek.map((day) => {
+                    const isInTutorSchedule = currentTutor?.schedule.includes(`${day}-${interval.split(" - ")[0].split(":")[0]}`);
+                    const isInSelectedSchedule = selectedSchedule.includes(`${day}-${interval.split(" - ")[0].split(":")[0]}`);
+                    // const isAlreadyOrdered = filteredDatesOfWeek.includes(convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
+                    const isAlreadyOrdered = filteredDatesOfWeek.some((t) => t.toString() === convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`).toString());
+                    // console.log(convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
+                    // const isAlreadyOrdered = filteredDatesOfWeek.some((timestamp) => timestamp === convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
+
+                    console.log(isAlreadyOrdered);
+                    if (`${day}-${interval.split(" - ")[0].split(":")[0]}` === "Mon-19") {
+                        console.log(convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
+                    }
+                    let currentStyle = "";
+
+                    if (isInTutorSchedule) {
+                        currentStyle = "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500";
+                    }
+                    if (isAlreadyOrdered) {
+                        currentStyle = "rounded bg-gray-200 text-gray-500 ";
+                    } else if (isInSelectedSchedule && isInTutorSchedule) {
+                        currentStyle = "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500 hover:cursor-pointer transition";
+                    }
+
+                    return (
+                        <td
+                            key={`${day}-${interval}`}
+                            className={currentStyle}
+                            onClick={() => {
+                                if (!isAlreadyOrdered) {
+                                    currentTutor?.schedule.includes(`${day}-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule(day, interval.split(" - ")[0].split(":")[0]);
+                                }
+                            }}
+                        >
+                            {interval}
+                        </td>
+                    );
+                })}
             </tr>
         ));
     };
+
+    // const generateTableRows = () => {
+    //     return timeIntervals.map((interval, index) => (
+    //         <tr key={index} className="text-white">
+    //             <td
+    //                 className={currentTutor.schedule.includes(`Mon-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Mon-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
+    //                 onClick={() => {
+    //                     currentTutor.schedule.includes(`Mon-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Mon", interval.split(" - ")[0].split(":")[0]);
+    //                 }}
+    //             >
+    //                 {interval}
+    //             </td>
+    //             <td
+    //                 className={currentTutor.schedule.includes(`Tue-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Tue-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
+    //                 onClick={() => {
+    //                     currentTutor.schedule.includes(`Tue-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Tue", interval.split(" - ")[0].split(":")[0]);
+    //                 }}
+    //             >
+    //                 {interval}
+    //             </td>
+    //             <td
+    //                 className={currentTutor.schedule.includes(`Wed-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Wed-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
+    //                 onClick={() => currentTutor.schedule.includes(`Wed-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Wed", interval.split(" - ")[0].split(":")[0])}
+    //             >
+    //                 {interval}
+    //             </td>
+    //             <td
+    //                 className={currentTutor.schedule.includes(`Thu-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Thu-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
+    //                 onClick={() => currentTutor.schedule.includes(`Thu-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Thu", interval.split(" - ")[0].split(":")[0])}
+    //             >
+    //                 {interval}
+    //             </td>
+    //             <td
+    //                 className={currentTutor.schedule.includes(`Fri-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Fri-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
+    //                 onClick={() => currentTutor.schedule.includes(`Fri-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Fri", interval.split(" - ")[0].split(":")[0])}
+    //             >
+    //                 {interval}
+    //             </td>
+    //             <td
+    //                 className={currentTutor.schedule.includes(`Sat-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Sat-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
+    //                 onClick={() => currentTutor.schedule.includes(`Sat-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Sat", interval.split(" - ")[0].split(":")[0])}
+    //             >
+    //                 {interval}
+    //             </td>
+    //             <td
+    //                 className={currentTutor.schedule.includes(`Sun-${interval.split(" - ")[0].split(":")[0]}`) && (selectedSchedule.includes(`Sun-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500")}
+    //                 onClick={() => currentTutor.schedule.includes(`Sun-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule("Sun", interval.split(" - ")[0].split(":")[0])}
+    //             >
+    //                 {interval}
+    //             </td>
+    //         </tr>
+    //     ));
+    // };
     return (
         <>
             <div className={`w-[80%] min-h-full mx-auto mt-8 flex flex-col ${isModal && "blur-lg"}`}>
@@ -281,8 +310,7 @@ const FindTutor = () => {
                     </div>
 
                     <div className="flex">
-                        <p className="font-medium">{tutors.length.toLocaleString()}</p> <p className="mx-1">results find for </p>
-                        <p>"{currentCategory}"</p>
+                        <p className="font-medium">{tutors.length.toLocaleString()}</p> <p className="mx-1">results found </p>
                     </div>
                 </div>
                 <div className="flex flex-wrap mt-4">
@@ -339,6 +367,16 @@ const FindTutor = () => {
                                 <h2 className="text-xl font-semibold mb-1">{currentTutor.fullname} </h2>
                                 <div className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[0.75em] rounded-md h-fit w-fit my-auto">{currentTutor.subject}</div>
                                 <p className="text-gray-700 text-sm mt-4">{currentTutor.description}</p>
+                            </div>
+                            <div>
+                                <button
+                                    className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                                    onClick={() => {
+                                        setIsModal(false);
+                                    }}
+                                >
+                                    Close
+                                </button>
                             </div>
                         </div>
                         <div className="flex flex-col w-[70%] justify-between">

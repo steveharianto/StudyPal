@@ -2,96 +2,59 @@ import React, { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "@firebase/firestore";
 import db from "../firebase";
 import Cookies from "universal-cookie";
-
-type MyClass = {
-    class: {
-        classID: string;
-        tutor: string;
-        student: string;
-        schedule: string[];
-    };
-};
-
-type MyActiveClass = {
-    activeClassID: string;
-    classID: string;
-    schedule: string[];
-    students: string[];
-    chatID: string;
-};
+import { MyClass, User, Classes } from "../Types";
+import { parseDate } from "../utils";
 
 function DashboardTutorMyLessons() {
     const cookies = new Cookies();
-
+    const userCookie = cookies.get("user");
     const classCollectionRef = collection(db, "class");
-    const [myClass, setMyClass] = useState<MyClass[]>([]);
-    const [currentClass, setCurrentClass] = useState({});
-    const [currentUser, setCurrentUser] = useState({});
-    const fetchMyClass = async () => {
-        const userCookie = cookies.get("user");
-        const getMyClass = await getDocs(query(classCollectionRef, where("tutor", "==", userCookie.username)));
-        let myClassList = getMyClass.docs.map((cl) => cl.data() as MyClass);
+    const timeIntervals = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"];
 
+    const [myClass, setMyClass] = useState<MyClass[]>([]);
+    const [currentClass, setCurrentClass] = useState<MyClass>(null);
+    const [currentUser, setCurrentUser] = useState<User>();
+
+    const [isModal, setIsModal] = useState(false);
+
+    const fetchMyClass = async () => {
+        const getMyClass = await getDocs(query(classCollectionRef, where("tutor", "==", userCookie.username)));
+        let myClassList: MyClass[] = getMyClass.docs.map((cl) => cl.data() as MyClass);
+
+        // Loop to add nextSession Variable
         myClassList = myClassList.map((lesson) => {
             const now = new Date();
-            const options = { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" };
             const sortedTimestamps = lesson.schedule
                 .map((timestamp) => timestamp.toDate()) // Convert Firestore Timestamp to JavaScript Date
                 .sort((a, b) => a - b); // Sort in ascending order
 
-            let nextTimestamp = null;
+            // Find Next Timestamp from now
+            let nextSession: string | Date = "No upcoming timestamp found";
             for (const t of sortedTimestamps) {
                 if (t > now) {
-                    nextTimestamp = new Date(t);
+                    nextSession = new Date(t);
                     break;
                 }
             }
-            let nextSession = "No upcoming timestamp found";
 
-            if (nextTimestamp) {
-                const formattedTimestamp = nextTimestamp.toLocaleDateString("en-US", options);
-                nextSession = formattedTimestamp;
+            // Convert to appropriate String Format -> December 12, 2023 at 07:00 PM
+            if (typeof nextSession !== "string") {
+                nextSession = nextSession.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
             }
+
             return { ...lesson, nextSession };
         });
 
-        function parseDate(dateString) {
-            // Split the string into parts
-            const parts = dateString.split(" at ");
-            const datePart = parts[0];
-            const timePart = parts[1];
-
-            // Use the Date constructor to parse the date part
-            const date = new Date(datePart);
-
-            // Parse the time part
-            const time = timePart.match(/(\d+):(\d+) (AM|PM)/);
-            let hour = parseInt(time[1]);
-            const minute = parseInt(time[2]);
-            const period = time[3];
-
-            // Adjust the hour if it's PM
-            if (period === "PM" && hour !== 12) {
-                hour += 12;
-            }
-
-            // Set the time components in the Date object
-            date.setHours(hour, minute);
-
-            return date;
-        }
-
+        // Sort According to Next Session
         myClassList.sort((a, b) => {
-            const dateA = a.nextSession === "No upcoming timestamp found" ? new Date() : new Date(parseDate(a.nextSession)); // Convert nextSession to a Date object
-            const dateB = b.nextSession === "No upcoming timestamp found" ? new Date() : new Date(parseDate(b.nextSession)); // Convert nextSession to a Date object
+            const dateA = a.nextSession === "No upcoming timestamp found" ? new Date() : new Date(parseDate(a.nextSession) || ""); // Convert nextSession to a Date object
+            const dateB = b.nextSession === "No upcoming timestamp found" ? new Date() : new Date(parseDate(b.nextSession) || ""); // Convert nextSession to a Date object
             return dateA - dateB;
         });
 
         setMyClass(myClassList);
     };
     const fetchCurrentUser = () => {
-        const userCookie = cookies.get("user");
-
         if (userCookie) {
             setCurrentUser(userCookie);
         }
@@ -102,150 +65,44 @@ function DashboardTutorMyLessons() {
         fetchMyClass();
     }, []);
 
-    // Will be replaced, get data from firebase
-    const [users, setUsers] = useState([
-        {
-            userID: "U001",
-            username: "Username1",
-            email: "user1@gmail.com",
-            password: "pass0001",
-            dob: "2023-11-21T12:30:45.678Z",
-            role: "Student",
-        },
-        {
-            userID: "U002",
-            username: "Username2",
-            email: "user2@gmail.com",
-            password: "pass0002",
-            dob: "2023-11-21T12:30:45.678Z",
-            role: "Tutor",
-        },
-        {
-            userID: "U003",
-            username: "Username3",
-            email: "user3@gmail.com",
-            password: "pass0003",
-            dob: "2023-11-21T12:30:45.678Z",
-            role: "Student",
-        },
-        {
-            userID: "U004",
-            username: "Username4",
-            email: "user4@gmail.com",
-            password: "pass0004",
-            dob: "2023-11-21T12:30:45.678Z",
-            role: "Student",
-        },
-        {
-            userID: "U005",
-            username: "Username5",
-            email: "user5@gmail.com",
-            password: "pass0005",
-            dob: "2023-11-21T12:30:45.678Z",
-            role: "Student",
-        },
-    ]);
-    const [classes, setClasses] = useState([
-        {
-            classID: "C001",
-            image: "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*4vlkTJCWbP2Kh2vyK9BdEw.png",
-            name: "Flutter for Beginners",
-            description: 'In a "Flutter for Beginners" tutor class, aspiring developers are introduced to the fundamentals of Flutter, a popular open-source framework for building natively compiled applications for mobile, web, and desktop from a single codebase.',
-            tutor: "U002",
-            schedule: ["Mon-11", "Mon-17", "Tue-12"],
-            tag: "IT & Software",
-            price: 125000,
-            rating: 4.9,
-        },
-        {
-            classID: "002",
-            image: "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*4vlkTJCWbP2Kh2vyK9BdEw.png",
-            name: "Flutter for Professionals",
-            description: 'In a "Flutter for Beginners" tutor class, aspiring developers are introduced to the fundamentals of Flutter, a popular open-source framework for building natively compiled applications for mobile, web, and desktop from a single codebase.',
-            tutor: "U002",
-            schedule: ["Mon-11", "Mon-17", "Tue-12"],
-            tag: "IT & Software",
-            price: 125000,
-            rating: 4.9,
-        },
-    ]);
-
-    const [activeClass, setActiveClass] = useState([
-        {
-            activeClassID: "AC001",
-            classID: "C001",
-            schedule: ["Mon-11", "Tue-11", "Thu-11"],
-            students: ["U001", "U003", "U004", "U005", "U006"],
-            chatID: "CH001",
-        },
-    ]);
-
-    // Main Functions
-    const [isModal, setIsModal] = useState(false);
-
-    const [timeIntervals, setTimeIntervals] = useState(["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"]);
-
-    const toggleSchedule = (day, time) => {
-        const scheduleItem = `${day}-${time}`;
-        if (currentClass.schedule.includes(scheduleItem)) {
-            // If it's already in the schedule, remove it
-            setCurrentClass((prevClass) => ({
-                ...prevClass,
-                schedule: prevClass.schedule.filter((item) => item !== scheduleItem),
-            }));
-        } else {
-            // If it's not in the schedule, add it
-            setCurrentClass((prevClass) => ({
-                ...prevClass,
-                schedule: [...prevClass.schedule, scheduleItem],
-            }));
-        }
-    };
+    // const toggleSchedule = (day: string, time: string) => {
+    //     const scheduleItem = `${day}-${time}`;
+    //     if (currentClass.schedule.includes(scheduleItem)) {
+    //         // If it's already in the schedule, remove it
+    //         setCurrentClass((prevClass) => ({
+    //             ...prevClass,
+    //             schedule: prevClass.schedule.filter((item) => item !== scheduleItem),
+    //         }));
+    //     } else {
+    //         // If it's not in the schedule, add it
+    //         setCurrentClass((prevClass) => ({
+    //             ...prevClass,
+    //             schedule: [...prevClass.schedule, scheduleItem],
+    //         }));
+    //     }
+    // };
 
     // Utility
-    const convertToReadableFormat = (session) => {
-        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const daysActual = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        const dayIndex = daysOfWeek.indexOf(session.split("-")[0]);
-        const time = session.split("-")[1];
-
-        if (dayIndex !== -1) {
-            const day = daysActual[dayIndex];
-            const formattedTime = `${time.slice(0, 2).padStart(2, "0")}:00 - ${String(parseInt(time) + 1).padStart(2, "0")}:00`;
-            return `${day}, ${formattedTime}`;
-        }
-
-        return session; // Return original input if the day is not found
-    };
 
     // Generate Time Table
-    const generateTableRows = () => {
-        return timeIntervals.map((interval, index) => (
-            <tr key={index}>
-                <td className={currentClass.schedule.includes(`Mon-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer"} onClick={() => toggleSchedule("Mon", interval.split(" - ")[0].split(":")[0])}>
-                    {interval}
-                </td>
-                <td className={currentClass.schedule.includes(`Tue-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer" : "rounded hover:bg-blue-300 hover:cursor-pointer"} onClick={() => toggleSchedule("Tue", interval.split(" - ")[0].split(":")[0])}>
-                    {interval}
-                </td>
-                <td className={currentClass.schedule.includes(`Wed-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer" : "rounded hover:bg-blue-300 hover:cursor-pointer"} onClick={() => toggleSchedule("Wed", interval.split(" - ")[0].split(":")[0])}>
-                    {interval}
-                </td>
-                <td className={currentClass.schedule.includes(`Thu-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer" : "rounded hover:bg-blue-300 hover:cursor-pointer"} onClick={() => toggleSchedule("Thu", interval.split(" - ")[0].split(":")[0])}>
-                    {interval}
-                </td>
-                <td className={currentClass.schedule.includes(`Fri-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer" : "rounded hover:bg-blue-300 hover:cursor-pointer"} onClick={() => toggleSchedule("Fri", interval.split(" - ")[0].split(":")[0])}>
-                    {interval}
-                </td>
-                <td className={currentClass.schedule.includes(`Sat-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer" : "rounded hover:bg-blue-300 hover:cursor-pointer"} onClick={() => toggleSchedule("Sat", interval.split(" - ")[0].split(":")[0])}>
-                    {interval}
-                </td>
-                <td className={currentClass.schedule.includes(`Sun-${interval.split(" - ")[0].split(":")[0]}`) ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer" : "rounded hover:bg-blue-300 hover:cursor-pointer"} onClick={() => toggleSchedule("Sun", interval.split(" - ")[0].split(":")[0])}>
-                    {interval}
-                </td>
-            </tr>
-        ));
-    };
+    // const generateTableRows = () => {
+    //     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    //     const generateTd = (day: string, interval: string) => {
+    //         const time = interval.split(" - ")[0].split(":")[0];
+    //         const isSelected = currentClass.schedule.includes(`${day}-${time}`);
+    //         const className = isSelected ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer";
+
+    //         return (
+    //             <td className={className} onClick={() => toggleSchedule(day, time)}>
+    //                 {interval}
+    //             </td>
+    //         );
+    //     };
+
+    //     return timeIntervals.map((interval, index) => <tr key={index}>{days.map((day) => generateTd(day, interval))}</tr>);
+    // };
+
     return (
         <>
             <div className="h-[60vh] mx-16 mt-4">
@@ -337,7 +194,7 @@ function DashboardTutorMyLessons() {
                                         <th className="w-[6em]">Sunday</th>
                                     </tr>
                                 </thead>
-                                <tbody className="text-xs text-center text-gray-500 select-none">{generateTableRows()}</tbody>
+                                {/* <tbody className="text-xs text-center text-gray-500 select-none">{generateTableRows()}</tbody> */}
                             </table>
                             <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-[50%]">Save Schedule</button>
                         </div>

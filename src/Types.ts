@@ -5,6 +5,12 @@ export type Classes = {
     student: string;
     tutor: string;
 };
+export type MyClass = {
+    schedule: Timestamp[];
+    student: string;
+    tutor: string;
+    nextSession: string;
+};
 export type Rating = {
     student: string;
     tutor: string;

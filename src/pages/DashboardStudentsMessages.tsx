@@ -7,6 +7,7 @@ import {
   where,
   onSnapshot,
   addDoc,
+  orderBy,
 } from "firebase/firestore";
 import db from "../firebase"; // Assuming db is your Firestore instance
 
@@ -93,13 +94,31 @@ const DashboardStudentMessages = () => {
       });
 
       // Fetch messages
-      const messagesQuery = query(collection(db, "messages"));
+      const messagesQuery = query(
+        collection(db, "messages"),
+        orderBy("timestamp", "desc")
+      );
       const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
         const fetchedMessages = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setMessages(fetchedMessages);
+
+        // Sort chats based on the latest message timestamp
+        combinedChats.sort((a, b) => {
+          const lastMessageA = fetchedMessages.find(
+            (message) => message.chatId === a.chatId
+          );
+          const lastMessageB = fetchedMessages.find(
+            (message) => message.chatId === b.chatId
+          );
+          const timestampA = lastMessageA ? lastMessageA.timestamp.seconds : 0;
+          const timestampB = lastMessageB ? lastMessageB.timestamp.seconds : 0;
+          return timestampB - timestampA; // Sort in descending order
+        });
+
+        setChats(combinedChats);
       });
 
       return () => {
@@ -115,7 +134,7 @@ const DashboardStudentMessages = () => {
   const getChatMessages = (chatId) => {
     return messages
       .filter((message) => message.chatId === chatId)
-      .sort((a, b) => a.timestamp - b.timestamp); 
+      .sort((a, b) => a.timestamp - b.timestamp);
   };
 
   const userInvolvedChats = chats.filter(

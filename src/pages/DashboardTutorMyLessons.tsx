@@ -1,22 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "@firebase/firestore";
+import { collection, getDocs, query, where, orderBy, limit } from "@firebase/firestore";
 import db from "../firebase";
 import Cookies from "universal-cookie";
-import { MyClass, User, Classes } from "../Types";
+import { MyClass, User, Classes, Chats } from "../Types";
 import { parseDate } from "../utils";
+import { addDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 function DashboardTutorMyLessons() {
     const cookies = new Cookies();
+    const navigate = useNavigate();
     const userCookie = cookies.get("user");
     const now = new Date();
     const classCollectionRef = collection(db, "class");
+    const chatsCollectionRef = collection(db, "chats");
 
     const [myClass, setMyClass] = useState<MyClass[]>([]);
     const [currentClass, setCurrentClass] = useState<MyClass | null>(null);
     const [currentUser, setCurrentUser] = useState<User>();
+    const [chats, setChats] = useState<Chats[]>();
 
     const [isModal, setIsModal] = useState(false);
 
+    const fetchChats = async () => {
+        const getChats = await getDocs(query(chatsCollectionRef));
+        const chatsList: Chats[] = getChats.docs.map((c) => c.data() as Chats);
+
+        setChats(chatsList);
+    };
     const fetchMyClass = async () => {
         const getMyClass = await getDocs(query(classCollectionRef, where("tutor", "==", userCookie.username)));
         let myClassList: MyClass[] = getMyClass.docs.map((cl) => cl.data() as MyClass);
@@ -63,46 +74,8 @@ function DashboardTutorMyLessons() {
     useEffect(() => {
         fetchCurrentUser();
         fetchMyClass();
+        fetchChats();
     }, []);
-
-    // const toggleSchedule = (day: string, time: string) => {
-    //     const scheduleItem = `${day}-${time}`;
-    //     if (currentClass.schedule.includes(scheduleItem)) {
-    //         // If it's already in the schedule, remove it
-    //         setCurrentClass((prevClass) => ({
-    //             ...prevClass,
-    //             schedule: prevClass.schedule.filter((item) => item !== scheduleItem),
-    //         }));
-    //     } else {
-    //         // If it's not in the schedule, add it
-    //         setCurrentClass((prevClass) => ({
-    //             ...prevClass,
-    //             schedule: [...prevClass.schedule, scheduleItem],
-    //         }));
-    //     }
-    // };
-
-    // Utility
-
-    // Generate Time Table
-    // const generateTableRows = () => {
-    //     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    //     const timeIntervals = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"];
-
-    //     const generateTd = (day: string, interval: string) => {
-    //         const time = interval.split(" - ")[0].split(":")[0];
-    //         const isSelected = currentClass.schedule.includes(`${day}-${time}`);
-    //         const className = isSelected ? "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500  hover:cursor-pointer transition" : "rounded hover:bg-blue-300 hover:cursor-pointer";
-
-    //         return (
-    //             <td className={className} onClick={() => toggleSchedule(day, time)}>
-    //                 {interval}
-    //             </td>
-    //         );
-    //     };
-
-    //     return timeIntervals.map((interval, index) => <tr key={index}>{days.map((day) => generateTd(day, interval))}</tr>);
-    // };
 
     return (
         <>
@@ -170,7 +143,40 @@ function DashboardTutorMyLessons() {
                                 </p>
                             </div>
                             <div>
-                                <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600  w-full ">Chat with Student</button>
+                                <button
+                                    className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600  w-full "
+                                    onClick={async () => {
+                                        const filteredChats = chats?.filter((chat) => {
+                                            return (chat.firstPerson === currentUser?.username && chat.secondPerson === currentClass?.student) || (chat.firstPerson === currentClass?.student && chat.secondPerson === currentUser?.username);
+                                        });
+                                        console.log(filteredChats);
+                                        if (filteredChats?.length == 0) {
+                                            // Generate ID
+                                            const querySnapshot = await getDocs(query(chatsCollectionRef, orderBy("chatId", "desc"), limit(1)));
+                                            let maxId = 0;
+
+                                            if (!querySnapshot.empty) {
+                                                const maxDoc = querySnapshot.docs[0];
+                                                maxId = (maxDoc.data() as Chats).chatId;
+                                            }
+                                            maxId++;
+
+                                            await addDoc(chatsCollectionRef, {
+                                                chatId: maxId,
+                                                firstPerson: currentUser?.username,
+                                                secondPerson: currentClass?.student,
+                                            });
+
+                                            cookies.set("redirectChat", maxId);
+                                            navigate("../messages");
+                                        } else {
+                                            cookies.set("redirectChat", filteredChats[0]?.chatId);
+                                            navigate("../messages");
+                                        }
+                                    }}
+                                >
+                                    Chat with Student
+                                </button>
                             </div>
                             <div>
                                 <button

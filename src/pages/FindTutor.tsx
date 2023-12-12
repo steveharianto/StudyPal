@@ -225,7 +225,7 @@ const FindTutor = () => {
                         currentStyle = "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500";
                     }
                     if (isAlreadyOrdered) {
-                        currentStyle = "rounded bg-gray-200 text-gray-500 ";
+                        currentStyle = "rounded bg-red-200 text-gray-500 ";
                     } else if (isInSelectedSchedule && isInTutorSchedule) {
                         currentStyle = "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500 hover:cursor-pointer transition";
                     }
@@ -323,13 +323,7 @@ const FindTutor = () => {
                     </div>
                 </div>
                 <div className="flex justify-between py-2 border-b-2">
-                    <div className="flex">
-                        <p>Suggestion: </p>
-                        {/* Suggestions Map TBD */}
-                        <p className="text-blue-600 mx-2">user interface</p>
-                        <p className="text-blue-600 mx-2">user experience</p>
-                        <p className="text-blue-600 mx-2">web design</p>
-                    </div>
+                    <div className="flex"></div>
 
                     <div className="flex">
                         <p className="font-medium">{filteredTutors.length.toLocaleString()}</p> <p className="mx-1">results found </p>

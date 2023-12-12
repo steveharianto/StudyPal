@@ -40,4 +40,5 @@ export type Tutor = {
     imageUrl: string;
     price: number;
     schedule: string[];
+    subject: string;
 };

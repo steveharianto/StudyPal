@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AiOutlineHome, AiOutlineMessage, AiOutlineBook, AiOutlineStar, AiOutlineLogout } from "react-icons/ai";
+import { RxAvatar } from "react-icons/rx";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import Cookies from "universal-cookie";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -58,9 +59,9 @@ const DashboardStudent = () => {
                         <span className="ml-2 text-gray-700">Balance: {formatRupiah(balance)}</span>
                     </div>
                     <div className="flex items-center">
-                        <AiOutlineStar className="w-6 h-6 text-yellow-500" />
-                        <Link to="/favorites" className="ml-2 text-gray-700 hover:text-blue-700">
-                            Favorites
+                        <RxAvatar className="w-6 h-6 text-sky-500" />
+                        <Link to="/dashboard-student/profile" className="ml-2 text-gray-700 hover:text-blue-700">
+                            Profile
                         </Link>
                     </div>
                 </div>

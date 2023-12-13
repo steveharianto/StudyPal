@@ -157,6 +157,7 @@ const FindTutor = () => {
             .catch((error) => {
                 console.error("Error querying user: ", error);
             });
+        navigate("/login");
     };
 
     const toggleSchedule = (day: string, time: string) => {

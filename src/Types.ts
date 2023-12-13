@@ -40,4 +40,11 @@ export type Tutor = {
     imageUrl: string;
     price: number;
     schedule: string[];
+    subject: string;
+};
+
+export type Chats = {
+    chatId: number;
+    firstPerson: string;
+    secondPerson: string;
 };

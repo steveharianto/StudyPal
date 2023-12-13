@@ -1,18 +1,159 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { collection, query, orderBy, limit, getDocs, where, doc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs, where, doc, updateDoc, getDoc, addDoc } from "firebase/firestore";
 import db from "../firebase"; // Import your Firebase config
 import { Container, Box, TextField, Button, Typography, Divider, Skeleton } from "@mui/material";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { Tutor, Classes } from "../Types";
+import { getCurrentWeekSchedule, convertTimeStringToTimestamp } from "../utils";
 
 const DashboardStudentHome = () => {
     const navigate = useNavigate();
+    const currentDate = new Date();
     const { cookies, setBalance } = useOutletContext();
+    const ClassCollectionRef = collection(db, "class");
+    const UsersCollectionRef = collection(db, "users");
+
     const [user, setUser] = useState({});
+    const [classes, setClasses] = useState<Classes[]>([]);
+    const [selectedSchedule, setSelectedSchedule] = useState<string[]>([]);
     const [recommendedTutors, setRecommendedTutors] = useState([]);
     const [recentMessages, setRecentMessages] = useState([]);
     const [topUpAmount, setTopUpAmount] = useState(0);
+
+    const [isModal, setIsModal] = useState(false);
+    const [currentTutor, setCurrentTutor] = useState<Tutor>();
+    const timeIntervals = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00", "22:00 - 23:00", "23:00 - 00:00"];
+
     const topUpAmountRef = useRef(topUpAmount);
+    const handleCheckoutButton = async (price: number) => {
+        // is Logged in?
+        if (user == null) {
+            navigate("/login");
+            return;
+        }
+        // Enough Balance?
+        if (user.balance < price) {
+            alert("insufficient balance");
+            return;
+        }
+        // Add Class
+        await addDoc(ClassCollectionRef, {
+            schedule: getCurrentWeekSchedule(selectedSchedule),
+            student: user.username,
+            tutor: currentTutor?.username,
+        });
+
+        // Take Balance
+        getDocs(query(UsersCollectionRef, where("username", "==", currentUser.username)))
+            .then((querySnapshot) => {
+                if (!querySnapshot.empty) {
+                    const userDoc = querySnapshot.docs[0];
+                    const userData = userDoc.data();
+                    const currentBalance = userData.balance;
+
+                    const newBalance = currentBalance - price;
+
+                    updateDoc(doc(UsersCollectionRef, userDoc.id), { balance: newBalance })
+                        .then(() => {
+                            console.log("Balance updated successfully.");
+                        })
+                        .catch((error) => {
+                            console.error("Error updating balance: ", error);
+                        });
+                    // Update Cookie
+                    const updatedUser = {
+                        ...user, // Assuming you have a function to get the user object from the cookie
+                        balance: newBalance,
+                    };
+
+                    cookies.set("user", updatedUser, { path: "/" });
+                    setUser(updatedUser);
+                } else {
+                    console.log("User not found.");
+                }
+            })
+            .catch((error) => {
+                console.error("Error querying user: ", error);
+            });
+    };
+    const generateHeader = (currentDate: Date) => {
+        // Calculate the start of the current week (Sunday as the first day)
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 7);
+
+        // Create an array to store the days of the week
+        const daysOfWeek = [];
+
+        // Generate the headers for Monday through Sunday
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + i);
+            daysOfWeek.push(
+                <th key={i} className="w-[6em]">
+                    <p>{date.toLocaleDateString("en-US", { weekday: "long" })}</p>
+                    <p>{date.getDate()}</p>
+                </th>
+            );
+        }
+
+        return <tr>{daysOfWeek}</tr>;
+    };
+    const generateTableRows = () => {
+        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const datesOfWeek = currentTutor ? getCurrentWeekSchedule(currentTutor.schedule) : [];
+        const filteredDatesOfWeek: Date[] = [];
+        classes.forEach((classItem) => {
+            if (classItem.tutor === currentTutor?.username) {
+                classItem.schedule.forEach((classTimestamp) => {
+                    datesOfWeek.forEach((dateOfWeek) => {
+                        if (classTimestamp.toDate().toString() === dateOfWeek.toString()) {
+                            filteredDatesOfWeek.push(dateOfWeek);
+                        }
+                    });
+                });
+            }
+        });
+        console.log(filteredDatesOfWeek);
+
+        return timeIntervals.map((interval, index) => (
+            <tr key={index} className="text-white">
+                {daysOfWeek.map((day) => {
+                    const isInTutorSchedule = currentTutor?.schedule.includes(`${day}-${interval.split(" - ")[0].split(":")[0]}`);
+                    const isInSelectedSchedule = selectedSchedule.includes(`${day}-${interval.split(" - ")[0].split(":")[0]}`);
+                    // const isAlreadyOrdered = filteredDatesOfWeek.includes(convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
+                    const isAlreadyOrdered = filteredDatesOfWeek.some((t) => t.toString() === convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`).toString());
+                    // console.log(convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
+                    // const isAlreadyOrdered = filteredDatesOfWeek.some((timestamp) => timestamp === convertTimeStringToTimestamp(`${day}-${interval.split(" - ")[0].split(":")[0]}`));
+
+                    let currentStyle = "";
+
+                    if (isInTutorSchedule) {
+                        currentStyle = "rounded hover:bg-blue-300 hover:cursor-pointer transition text-gray-500";
+                    }
+                    if (isAlreadyOrdered) {
+                        currentStyle = "rounded bg-gray-200 text-gray-500 ";
+                    } else if (isInSelectedSchedule && isInTutorSchedule) {
+                        currentStyle = "bg-blue-500 rounded font-medium text-white hover:bg-gray-200 hover:text-gray-500 hover:cursor-pointer transition";
+                    }
+
+                    return (
+                        <td
+                            key={`${day}-${interval}`}
+                            className={currentStyle}
+                            onClick={() => {
+                                if (!isAlreadyOrdered) {
+                                    currentTutor?.schedule.includes(`${day}-${interval.split(" - ")[0].split(":")[0]}`) && toggleSchedule(day, interval.split(" - ")[0].split(":")[0]);
+                                }
+                            }}
+                        >
+                            {interval}
+                        </td>
+                    );
+                })}
+            </tr>
+        ));
+    };
 
     const fetchTutors = async () => {
         try {
@@ -38,6 +179,15 @@ const DashboardStudentHome = () => {
         } catch (error) {
             console.error("Error fetching tutors: ", error);
         }
+    };
+
+    const fetchClasses = async () => {
+        const classesSnapshot = await getDocs(query(collection(db, "class")));
+        const tempClass: Classes[] = [];
+        classesSnapshot.forEach((doc) => {
+            tempClass.push(doc.data() as Classes);
+        });
+        setClasses(tempClass);
     };
 
     const fetchRecentMessages = async () => {
@@ -143,6 +293,7 @@ const DashboardStudentHome = () => {
         if (user && user.username) {
             fetchRecentMessages();
             fetchTutors();
+            fetchClasses();
         }
     }, [user]);
 
@@ -159,7 +310,14 @@ const DashboardStudentHome = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {recommendedTutors.length > 0
                             ? recommendedTutors.map((tutor, index) => (
-                                  <div key={index} className="bg-white p-6 shadow-md rounded-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out">
+                                  <div
+                                      key={index}
+                                      className="bg-white p-6 shadow-md rounded-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out"
+                                      onClick={() => {
+                                          setIsModal(true);
+                                          setCurrentTutor(tutor);
+                                      }}
+                                  >
                                       <img src={tutor.imageUrl} alt={`Image of ${tutor.fullname}`} className="w-full h-60 object-cover rounded-lg mb-4" />
                                       <h4 className="font-semibold text-lg text-green-600 mb-2">{tutor.fullname}</h4>
                                       <p className="text-gray-700">Subject: {tutor.subject}</p>
@@ -253,6 +411,50 @@ const DashboardStudentHome = () => {
                     </Container>
                 </PayPalScriptProvider>
             </main>
+            {isModal && (
+                <div className="fixed inset-0 flex items-center justify-center">
+                    <div className="bg-white w-[70em] h-[40em] p-4 rounded-lg shadow-lg flex justify-between overflow-y-auto">
+                        <div className="flex flex-col w-[30%] h-full justify-between">
+                            <div className="overflow-y-auto">
+                                <div className="rounded-lg h-[45%]">
+                                    <img src={currentTutor.imageUrl} alt="" className="object-cover h-full w-full rounded-lg" />
+                                </div>
+                                <h2 className="text-xl font-semibold mb-1">{currentTutor.fullname} </h2>
+                                <div className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[0.75em] rounded-md h-fit w-fit my-auto">{currentTutor.subject}</div>
+                                <p className="text-gray-700 text-sm mt-4">{currentTutor.description}</p>
+                            </div>
+                            <div>
+                                <button
+                                    className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                                    onClick={() => {
+                                        setIsModal(false);
+                                    }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex flex-col w-[70%] justify-between">
+                            <table>
+                                <thead>{generateHeader(currentDate)}</thead>
+                                <tbody className="text-xs text-center text-gray-500 select-none">{generateTableRows()}</tbody>
+                            </table>
+                            <div className={`${selectedSchedule.length * currentTutor.price != 0 && currentUser && (currentUser?.balance >= selectedSchedule.length * currentTutor.price ? "text-green-400" : "text-red-400")}`}> Total Price : Rp. {(selectedSchedule.length * currentTutor.price).toLocaleString()}</div>
+                            <button
+                                className={`transition mt-4  py-2 px-4 rounded  w-[50%] ${selectedSchedule.length * currentTutor.price != 0 && currentUser?.balance >= selectedSchedule.length * currentTutor.price ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-200 text-gray-500"}`}
+                                onClick={() => {
+                                    if (selectedSchedule.length * currentTutor.price != 0) {
+                                        handleCheckoutButton(selectedSchedule.length * currentTutor.price);
+                                        setSelectedSchedule([]);
+                                    }
+                                }}
+                            >
+                                Checkout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

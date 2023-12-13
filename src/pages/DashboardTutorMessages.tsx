@@ -3,10 +3,12 @@ import { AiOutlineSend } from "react-icons/ai";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { collection, query, where, onSnapshot, addDoc } from "firebase/firestore";
 import db from "../firebase";
+import Cookies from "universal-cookie";
 
 const DashboardTutorMessages = () => {
     const navigate = useNavigate();
     const { cookies } = useOutletContext();
+    const candy = new Cookies();
     const [user, setUser] = useState({});
     const [selectedChatId, setSelectedChatId] = useState(null);
     const [inputMessage, setInputMessage] = useState("");
@@ -42,6 +44,11 @@ const DashboardTutorMessages = () => {
 
     useEffect(() => {
         const userCookie = cookies.get("user");
+        const chatCookie = candy.get("redirectChat");
+        if (chatCookie) {
+            setSelectedChatId(chatCookie);
+            candy.remove("redirectChat");
+        }
         if (userCookie) {
             setUser({
                 username: userCookie.username,

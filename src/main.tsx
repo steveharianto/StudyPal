@@ -12,6 +12,7 @@ import DashboardTutor from "./pages/DashboardTutor";
 import DashboardStudentMyLessons from "./pages/DashboardStudentMyLessons";
 import DashboardStudentMessages from "./pages/DashboardStudentsMessages";
 import DashboardStudentHome from "./pages/DashboardStudentHome";
+import DashboardStudentProfile from "./pages/DashboardStudentProfile";
 import DashboardTutorHome from "./pages/DashboardTutorHome";
 import DashboardTutorMessages from "./pages/DashboardTutorMessages";
 import DashboardTutorMyLessons from "./pages/DashboardTutorMyLessons";
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
         path: "my-lessons",
         element: <DashboardStudentMyLessons />,
       },
+      {
+        path: "profile",
+        element: <DashboardStudentProfile />,
+      },
     ],
   },
   {
@@ -70,7 +75,7 @@ const router = createBrowserRouter([
     errorElement: <Error />,
     children: [
       {
-        path: "home",
+        path: "",
         element: <DashboardTutorHome />,
       },
       {

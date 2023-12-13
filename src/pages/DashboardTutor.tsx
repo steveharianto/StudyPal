@@ -17,7 +17,7 @@ function DashboardTutor() {
                                 <img src="/logo.png" alt="Logo" className="h-10" />
                                 <span className="text-2xl font-bold text-white">Studypal</span>
                             </div>
-                            <Link to="/dashboard-tutor/home" className="flex items-center space-x-2 hover:text-blue-300">
+                            <Link to="/dashboard-tutor/" className="flex items-center space-x-2 hover:text-blue-300">
                                 <AiOutlineHome className="text-xl" />
                                 <span>Home</span>
                             </Link>

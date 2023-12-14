@@ -16,11 +16,15 @@ function DashboardTutorMyLessons() {
     const chatsCollectionRef = collection(db, "chats");
 
     const [myClass, setMyClass] = useState<MyClass[]>([]);
+    const [historyUsername, setHistoryUsername] = useState({});
+    const [currentHistory, setCurrentHistory] = useState();
+    const [currentName, setCurrentName] = useState<string>();
     const [currentClass, setCurrentClass] = useState<MyClass | null>(null);
     const [currentUser, setCurrentUser] = useState<User>();
     const [chats, setChats] = useState<Chats[]>();
 
     const [isModal, setIsModal] = useState(false);
+    const [historyModal, setHistoryModal] = useState(false);
 
     const fetchChats = async () => {
         const getChats = await getDocs(query(chatsCollectionRef));
@@ -28,9 +32,30 @@ function DashboardTutorMyLessons() {
 
         setChats(chatsList);
     };
+
+    // Object.keys(myDictionary).forEach((key) => {
+    //     doubledDictionary[key] = myDictionary[key] * 2;
+    //   });
     const fetchMyClass = async () => {
         const getMyClass = await getDocs(query(classCollectionRef, where("tutor", "==", userCookie.username)));
         let myClassList: MyClass[] = getMyClass.docs.map((cl) => cl.data() as MyClass);
+        let studentList: { [student: string]: Timestamp[] } = {};
+
+        for (const myClassItem of myClassList) {
+            const student = myClassItem.student;
+            const timestamps = myClassItem.schedule;
+
+            // Check if the student already exists in studentList
+            if (studentList[student]) {
+                // If the student exists, append the timestamps to their existing list
+                studentList[student].push(...timestamps);
+            } else {
+                // If the student doesn't exist, create a new entry with the timestamps
+                studentList[student] = timestamps;
+            }
+        }
+        setHistoryUsername(studentList);
+        
 
         // Loop to add nextSession Variable
         myClassList = myClassList.map((lesson) => {
@@ -107,27 +132,26 @@ function DashboardTutorMyLessons() {
                 </div>
                 <h2 className="text-2xl font-bold text-green-600 mb-6">Class History</h2>
                 <div className="max-h-[50vh] overflow-auto">
-                    {myClass.map((lesson) => {
-                        if (lesson.nextSession === "No upcoming timestamp found") {
+                    {Object.keys(historyUsername).map((student, index) => {
                             return (
                                 <div
-                                    key={lesson.id}
+                                    key={index}
                                     className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4 hover:cursor-pointer"
                                     onClick={() => {
-                                        setCurrentClass(lesson);
-                                        setIsModal(true);
+                                        setCurrentHistory(historyUsername[student]);
+                                        setCurrentName(student);
+                                        setHistoryModal(true);
                                     }}
                                 >
                                     <div className="flex items-center space-x-4">
                                         <img src="/logo.png" alt="Tutor" className="h-16 w-16 rounded-full" />
                                         <div>
-                                            <span className="font-semibold text-white text-lg">Class with {lesson.student}</span>
+                                            <span className="font-semibold text-white text-lg">Class with {student}</span>
                                             <span className="block text-gray-200"></span>
                                         </div>
                                     </div>
                                 </div>
                             );
-                        }
                     })}
                 </div>
             </div>
@@ -137,7 +161,7 @@ function DashboardTutorMyLessons() {
                         <div className="flex flex-col w-[30%] h-full justify-between">
                             <div>
                                 <img src="/tutor_placeholder_image.jpeg" alt="Tutor" className="w-full object-cover rounded-xl shadow-md aspect-[1/1]" />
-                                <p className="font-bold text-xl text-center mt-2">{currentClass.student}</p>
+                                <p className="font-bold text-xl text-center mt-2">{currentClass?.student}</p>
                                 <p>
                                     Finished Class : {currentClass.schedule.filter((timestamp) => timestamp.toDate() < now).length} / {currentClass.schedule.length}
                                 </p>
@@ -209,6 +233,41 @@ function DashboardTutorMyLessons() {
                                     })}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}{historyModal && (
+                <div className="fixed inset-0 flex items-center justify-center">
+                    <div className="bg-white w-[70em] h-[35em] p-4 rounded-lg shadow-lg flex justify-between overflow-y-auto">
+                        <div className="flex flex-col w-[30%] h-full justify-between">
+                            <div>
+                                <img src="/tutor_placeholder_image.jpeg" alt="Tutor" className="w-full object-cover rounded-xl shadow-md aspect-[1/1]" />
+                                <p className="font-bold text-xl text-center mt-2">{currentName}</p>
+                            </div>
+                            <div>
+                                <button
+                                    className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                                    onClick={() => {
+                                        setHistoryModal(false);
+                                    }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                        <div className=" px-4 flex flex-col w-[70%] justify-between">
+                            <p className="font-bold text-xl text-blue-500">Completed Sessions</p>
+                            
+                            <div className=" w-full h-full flex flex-col">
+                            {currentHistory?.map((c,index) => {
+                                
+                                const now = new Date();
+                                if (c.toDate() < now) {
+                                return (<div key={index} className="w-full h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg my-2 flex items-center px-4">
+                                <p className="block text-gray-200">{c.toDate().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                            </div>)}
+                            })}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -48,6 +48,7 @@ const DashboardStudentMyClasses = () => {
 
       for (const doc of querySnapshot.docs) {
         const classData = doc.data();
+        const classID = doc.id;
 
         // Fetch tutor details
         const tutorQuery = query(
@@ -59,8 +60,12 @@ const DashboardStudentMyClasses = () => {
 
         classData.schedule.forEach((timestamp) => {
           const scheduleDate = timestamp.toDate();
+          const unixTimestamp = Math.floor(scheduleDate.getTime() / 1000); // Convert to Unix timestamp
+          const scheduleId = `${classID}-${unixTimestamp}`;
           allSchedules.push({
             ...classData,
+            classID,
+            scheduleId, // Add scheduleId to each class item
             schedule: scheduleDate,
             tutorFullName: tutorData?.fullname || "Unknown",
             tutorImageUrl: tutorData?.imageUrl || "/default-tutor-image.jpg",
@@ -95,20 +100,31 @@ const DashboardStudentMyClasses = () => {
       });
       setTutorsToRate(Array.from(tutorDetails.values()));
 
-      const ratingsQuery = query(
-        collection(db, "rating"),
-        where("student", "==", userCookie.username)
-      );
-      const ratingsSnapshot = await getDocs(ratingsQuery);
-      const initialRatings = {};
-      ratingsSnapshot.forEach((doc) => {
-        const data = doc.data();
-        initialRatings[data.tutor] = data.value;
-      });
-  
-      setRatings(initialRatings);
+      let ratingsMap = {};
+
+      for (const classItem of allSchedules) {
+        const scheduleTimestamp = String(
+          Math.floor(classItem.schedule.getTime() / 1000)
+        );
+        const ratingQuery = query(
+          collection(db, "rating"),
+          where("student", "==", userCookie.username),
+          where("classID", "==", classItem.classID),
+          where("scheduleTimestamp", "==", scheduleTimestamp)
+        );
+
+        const ratingSnapshot = await getDocs(ratingQuery);
+
+        if (!ratingSnapshot.empty) {
+          ratingSnapshot.forEach((doc) => {
+            const ratingData = doc.data();
+            ratingsMap[classItem.scheduleId] = ratingData.value;
+          });
+        } 
+      }
+      setRatings(ratingsMap);
     };
-    
+
     fetchClasses();
   }, [navigate, cookies]);
 
@@ -117,34 +133,35 @@ const DashboardStudentMyClasses = () => {
   };
 
   // Submit rating to Firebase
-  const handleRatingChange = async (tutorUsername, newRating) => {
-    if (!newRating) {
-      return;
-    }
-  
-    // Check if the student has already rated this tutor
+  // Update function to handle rating change
+  const handleRatingChange = async (scheduleId, newRating) => {
+    if (!newRating) return;
+
+    // Unique identifiers for Firebase query
+    const [classID, scheduleTimestamp] = scheduleId.split("-");
+
     const ratingQuery = query(
       collection(db, "rating"),
       where("student", "==", user.username),
-      where("tutor", "==", tutorUsername)
+      where("classID", "==", classID),
+      where("scheduleTimestamp", "==", scheduleTimestamp)
     );
+
     const querySnapshot = await getDocs(ratingQuery);
-  
-    // If a rating already exists, update it. Otherwise, create a new rating.
+
     const ratingRef = querySnapshot.empty
       ? doc(collection(db, "rating"))
       : doc(db, "rating", querySnapshot.docs[0].id);
-  
+
     await setDoc(ratingRef, {
-      tutor: tutorUsername,
+      classID,
+      scheduleTimestamp,
       student: user.username,
       value: newRating,
     });
-  
-    // Update local state
-    setRatings((prevRatings) => ({ ...prevRatings, [tutorUsername]: newRating }));
-  };
 
+    setRatings((prevRatings) => ({ ...prevRatings, [scheduleId]: newRating }));
+  };
   return (
     <div className="container mx-auto p-4 h-4/5 flex flex-col space-y-6 h-[80vh]">
       {/* Upcoming Classes Section */}
@@ -156,7 +173,7 @@ const DashboardStudentMyClasses = () => {
           {upcomingClasses.length > 0 ? (
             upcomingClasses.map((classItem) => (
               <div
-                key={classItem.classID}
+                key={classItem.scheduleId}
                 className="mb-4 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg rounded-lg p-4 flex items-center space-x-4"
               >
                 <img
@@ -165,9 +182,6 @@ const DashboardStudentMyClasses = () => {
                   className="h-16 w-16 rounded-full"
                 />
                 <div>
-                  <span className="font-semibold text-white text-lg">
-                    {classItem.classID}
-                  </span>
                   <span className="block text-gray-200">
                     {formatDate(classItem.schedule)}
                   </span>
@@ -193,22 +207,30 @@ const DashboardStudentMyClasses = () => {
           {classHistory.length > 0 ? (
             classHistory.map((classItem) => (
               <div
-                key={classItem.classID}
-                className="mb-4 bg-gradient-to-r from-indigo-500 to-blue-500 shadow-lg rounded-lg p-4 flex items-center space-x-4"
+                key={classItem.scheduleId}
+                className="mb-4 bg-gradient-to-r from-indigo-500 to-blue-500 shadow-lg rounded-lg p-4 flex items-center justify-between"
               >
-                <img
-                  src={classItem.tutorImageUrl}
-                  alt="Tutor"
-                  className="h-16 w-16 rounded-full"
-                />
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={classItem.tutorImageUrl}
+                    alt="Tutor"
+                    className="h-16 w-16 rounded-full"
+                  />
+                  <div>
+                    <span className="block text-gray-200">
+                      {formatDate(classItem.schedule)}
+                    </span>
+                    <span className="block text-gray-200">{`Tutor: ${classItem.tutorFullName}`}</span>
+                  </div>
+                </div>
                 <div>
-                  <span className="font-semibold text-white text-lg">
-                    {classItem.classID}
-                  </span>
-                  <span className="block text-gray-200">
-                    {formatDate(classItem.schedule)}
-                  </span>
-                  <span className="block text-gray-200">{`Tutor: ${classItem.tutorFullName}`}</span>
+                  <Rating
+                    name={`rating-${classItem.scheduleId}`}
+                    value={Number(ratings[classItem.scheduleId]) || 0}
+                    onChange={(event, newValue) => {
+                      handleRatingChange(classItem.scheduleId, newValue);
+                    }}
+                  />
                 </div>
               </div>
             ))
@@ -216,45 +238,6 @@ const DashboardStudentMyClasses = () => {
             <Paper elevation={3} className="p-4">
               <Typography variant="h6" color="textSecondary">
                 You have no class history.
-              </Typography>
-            </Paper>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col flex-grow">
-        <h2 className="text-2xl font-bold text-orange-600 mb-6">
-          Rate Your Tutors
-        </h2>
-        <div className="max-h-[30vh] overflow-auto mb-10 flex-grow">
-          {tutorsToRate.length > 0 ? (
-            tutorsToRate.map((tutor) => (
-              <div
-                key={tutor.username}
-                className="mb-4 bg-gradient-to-r from-green-400 to-emerald-400 shadow-lg rounded-lg p-4 flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-4 w-1/3">
-                  <img
-                    src={tutor.imageUrl}
-                    alt="Tutor"
-                    className="h-16 w-16 rounded-full"
-                  />
-                  <span className="font-semibold text-white text-lg">
-                    {tutor.fullname}
-                  </span>
-                </div>
-                <Rating
-                  name="rating"
-                  value={Number(ratings[tutor.username]) || 0}
-                  onChange={(event, newValue) => {
-                    handleRatingChange(tutor.username, newValue);
-                  }}
-                />
-              </div>
-            ))
-          ) : (
-            <Paper elevation={3} className="p-4">
-              <Typography variant="h6" color="textSecondary">
-                No tutors available to rate.
               </Typography>
             </Paper>
           )}

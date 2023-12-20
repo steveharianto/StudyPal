@@ -14,7 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
 import Cookies from "universal-cookie";
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import db from "../firebase";
 
 const cookies = new Cookies();
@@ -33,11 +33,13 @@ const Home: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault(); // Prevents the default form submit action
+
     try {
       await addDoc(collection(db, "customerMessages"), {
         name,
         email,
         content,
+        timestamp: serverTimestamp(),
       });
       // Clear the form fields after submission
       setName("");

@@ -9,6 +9,7 @@ import {
 import { RxAvatar } from "react-icons/rx";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import Cookies from "universal-cookie";
+import { parseDate } from "../utils";
 import {
   collection,
   query,
@@ -21,6 +22,7 @@ import {
 } from "firebase/firestore";
 import db from "../firebase";
 import { User } from "../Types";
+import { Msg } from "../Types";
 
 const cookies = new Cookies();
 
@@ -28,7 +30,9 @@ const DashboardStudent = () => {
   const navigate = useNavigate();
   const userCookie = cookies.get("admin");
   const usersCollectionRef = collection(db, "users");
+  const msgCollectionRef = collection(db, "customerMessages");
   const [users, setUsers] = useState<User[]>([]);
+  const [msg, setMsg] = useState<Msg[]>([]);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -40,6 +44,14 @@ const DashboardStudent = () => {
     dob: null,
   });
   const [isEditing, setIsEditing] = useState(false);
+
+  const fetchMsg = async () => {
+    const getMsg = await getDocs(query(msgCollectionRef));
+    const msgList: Msg[] = getMsg.docs.map((c) => c.data() as Msg);
+
+    setMsg(msgList);
+    console.log(msgList);
+  };
 
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 5;
@@ -142,6 +154,7 @@ const DashboardStudent = () => {
 
     fetchUserData();
     fetchUsers();
+    fetchMsg();
   }, []);
 
   const handleSubmit = async (event) => {
@@ -245,6 +258,32 @@ const DashboardStudent = () => {
                 </th>
               </tr>
             </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr className="bg-white border-b" key={user.id}>
+                  <td className="py-4 px-6">{user.fullname}</td>
+                  <td className="py-4 px-6">{user.email}</td>
+                  <td className="py-4 px-6">{user.role}</td>
+                  <td className="py-4 px-6">{user.username}</td>
+                  <td className="py-4 px-6">{user.balance}</td>
+                  <td className="py-4 px-6">{user.phoneNumber}</td>
+                  <td className="py-4 px-6">
+                    <button
+                      onClick={() => editUser(user)}
+                      className="font-medium text-blue-600 hover:underline mr-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteUser(user.email)}
+                      className="font-medium text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
             <tbody>{renderUsers}</tbody>
             <ul className="flex mt-4">{renderPageNumbers}</ul>
           </table>
@@ -396,6 +435,34 @@ const DashboardStudent = () => {
               )}
             </div>
           </form>
+
+          <div className="mt-8 space-y-6 mx-16">
+            <p className="font-bold text-xl mt-8">Customer Messages</p>
+            {msg && (
+              <>
+                <div className="mt-8 space-y-6 mx-16">
+                  <p className="font-bold text-xl mt-8">Customer Messages</p>
+                  {msg &&
+                    msg.length > 0 &&
+                    msg.map((message, index) => (
+                      <div
+                        key={index}
+                        className="bg-white p-6 rounded-lg shadow-md"
+                      >
+                        {message.timestamp && (
+                          <p className="text-gray-600">
+                            {message.timestamp.toDate().toLocaleString()}
+                          </p>
+                        )}
+                        <p className="text-xl font-bold mt-2">{message.name}</p>
+                        <p className="text-gray-800 mt-2">{message.content}</p>
+                        <p className="text-blue-500 mt-2">{message.email}</p>
+                      </div>
+                    ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

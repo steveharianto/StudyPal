@@ -45,6 +45,62 @@ const DashboardStudent = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
 
+  const fetchMsg = async () => {
+    const getMsg = await getDocs(query(msgCollectionRef));
+    const msgList: Msg[] = getMsg.docs.map((c) => c.data() as Msg);
+
+    setMsg(msgList);
+    console.log(msgList);
+  };
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 5;
+
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+
+  const totalPages = Math.ceil(users.length / usersPerPage);
+
+  const renderUsers = currentUsers.map((user) => (
+    <tr className="bg-white border-b" key={user.id}>
+      <td className="py-4 px-6">{user.fullname}</td>
+      <td className="py-4 px-6">{user.email}</td>
+      <td className="py-4 px-6">{user.role}</td>
+      <td className="py-4 px-6">{user.username}</td>
+      <td className="py-4 px-6">{user.balance}</td>
+      <td className="py-4 px-6">{user.phoneNumber}</td>
+      <td className="py-4 px-6">
+        <button
+          onClick={() => editUser(user)}
+          className="font-medium text-blue-600 hover:underline mr-2"
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => deleteUser(user.email)}
+          className="font-medium text-red-600 hover:underline"
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  ));
+
+  const renderPageNumbers = Array.from({ length: totalPages }, (_, index) => (
+    <li
+      key={index + 1}
+      className={`inline-block px-2 py-1 mx-1 border cursor-pointer ${
+        index + 1 === currentPage
+          ? "bg-blue-500 text-white"
+          : "bg-gray-200 text-gray-700 hover:bg-blue-300"
+      }`}
+      onClick={() => setCurrentPage(index + 1)}
+    >
+      {index + 1}
+    </li>
+  ));
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prevState) => ({
@@ -73,15 +129,6 @@ const DashboardStudent = () => {
 
     setUsers(usersList);
   };
-
-  const fetchMsg = async () => {
-    const getMsg = await getDocs(query(msgCollectionRef));
-    const msgList: Msg[] = getMsg.docs.map((c) => c.data() as Msg);
-
-    setMsg(msgList);
-    console.log(msgList);
-  };
-
   const updateUser = async (email, updatedUser) => {
     const userQuery = query(
       collection(db, "users"),
@@ -237,6 +284,8 @@ const DashboardStudent = () => {
                 </tr>
               ))}
             </tbody>
+            <tbody>{renderUsers}</tbody>
+            <ul className="flex mt-4">{renderPageNumbers}</ul>
           </table>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6 mx-16">

@@ -11,6 +11,17 @@ import {
 } from "firebase/firestore";
 import db from "../firebase"; // Assuming db is your Firestore instance
 
+const groupMessagesByDate = (messages) => {
+  return messages.reduce((groups, message) => {
+    const date = message.timestamp.toDate().toLocaleDateString();
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(message);
+    return groups;
+  }, {});
+};
+
 const DashboardStudentMessages = () => {
   const navigate = useNavigate();
   const { cookies } = useOutletContext();
@@ -31,6 +42,11 @@ const DashboardStudentMessages = () => {
     setSelectedChatId(chatId);
   };
 
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp.toDate()); // Convert Firestore timestamp to JS Date
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
   const handleMessageSend = async () => {
     if (inputMessage.trim() === "") return;
 
@@ -49,6 +65,43 @@ const DashboardStudentMessages = () => {
     await addDoc(collection(db, "messages"), newMessage);
 
     setInputMessage("");
+  };
+
+  const renderMessages = () => {
+    const chatMessages = getChatMessages(selectedChatId);
+    const groupedMessages = groupMessagesByDate(chatMessages);
+
+    return Object.keys(groupedMessages).map((date) => (
+      <div key={date}>
+        <div className="text-center my-4 p-1 bg-gray-300 rounded">
+          {date}
+        </div>
+        {groupedMessages[date].map((message, index) => (
+          <div
+          key={index}
+          className={`flex mb-4 ${
+            message.sender === user.username
+              ? "justify-end"
+              : "justify-start"
+          }`}
+        >
+          <div
+            className={`p-3 rounded-lg ${
+              message.sender === user.username
+                ? "bg-blue-200"
+                : "bg-green-200"
+            } shadow-md`}
+          >
+            <div className="flex items-end justify-center">
+              <div className="text-xs text-gray-500 mr-2">{message.sender === user.username && formatTimestamp(message.timestamp)}</div> 
+              <div>{message.content}</div>
+              <div className="text-xs text-gray-500 ml-2">{message.sender !== user.username && formatTimestamp(message.timestamp)}</div>
+            </div>
+          </div>
+        </div>
+        ))}
+      </div>
+    ));
   };
 
   useEffect(() => {
@@ -169,27 +222,7 @@ const DashboardStudentMessages = () => {
       <div className="flex flex-col w-3/4 bg-gradient-to-b from-white to-gray-100 max-h-[80vh]">
         {/* Chat Messages */}
         <div className="flex-grow overflow-y-auto p-4">
-          {messages &&
-            getChatMessages(selectedChatId).map((message, index) => (
-              <div
-                key={index}
-                className={`flex mb-4 ${
-                  message.sender === user.username
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                <div
-                  className={`p-3 rounded-lg ${
-                    message.sender === user.username
-                      ? "bg-blue-200"
-                      : "bg-green-200"
-                  } shadow-md`}
-                >
-                  <p>{message.content}</p>
-                </div>
-              </div>
-            ))}
+          {messages && renderMessages()}
         </div>
 
         {/* Message Input */}

@@ -19,49 +19,6 @@ const cookies = new Cookies();
 const UsersCollectionRef = collection(db, "users");
 
 function PPModal(props) {
-  const fileInputRef = useRef(null);
-  const userCookie = cookies.get("user");
-
-  const updatePP = async () => {
-    const file = fileInputRef.current.files[0];
-    console.log("Selected File:", file);
-
-    let imageUrl = "";
-    const storage = getStorage();
-    // Use the username as the file name for the image
-    const imageRef = ref(storage, `images/${userCookie.username}`);
-
-    try {
-      const snapshot = await uploadBytes(imageRef, file);
-      imageUrl = await getDownloadURL(snapshot.ref);
-    } catch (error) {
-      console.error("Error uploading image: ", error);
-      alert("Error uploading image. Please try again.");
-      return;
-    }
-
-    const userQuery = query(
-      UsersCollectionRef,
-      where("email", "==", userCookie.email)
-    );
-    const querySnapshot = await getDocs(userQuery);
-    const userDoc = querySnapshot.docs.find((doc) => doc.exists);
-
-    // Corrected updateDoc call with the fields and values to update
-    await updateDoc(userDoc.ref, {
-      imageUrl: imageUrl,
-    });
-
-    // Update the userCookie with the new imageUrl
-    const updatedUserCookie = {
-      ...userCookie,
-      imageUrl: imageUrl,
-    };
-
-    props.setModal(false);
-    location.reload();
-  };
-
   return (
     <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
       {/* Overlay */}

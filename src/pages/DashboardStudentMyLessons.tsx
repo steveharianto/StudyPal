@@ -134,34 +134,35 @@ const DashboardStudentMyClasses = () => {
 
   // Submit rating to Firebase
   // Update function to handle rating change
-  const handleRatingChange = async (scheduleId, newRating) => {
+  const handleRatingChange = async (scheduleId, newRating, tutorUsername) => {
     if (!newRating) return;
-
-    // Unique identifiers for Firebase query
+  
     const [classID, scheduleTimestamp] = scheduleId.split("-");
-
+  
     const ratingQuery = query(
       collection(db, "rating"),
       where("student", "==", user.username),
       where("classID", "==", classID),
       where("scheduleTimestamp", "==", scheduleTimestamp)
     );
-
+  
     const querySnapshot = await getDocs(ratingQuery);
-
+  
     const ratingRef = querySnapshot.empty
       ? doc(collection(db, "rating"))
       : doc(db, "rating", querySnapshot.docs[0].id);
-
+  
     await setDoc(ratingRef, {
       classID,
       scheduleTimestamp,
       student: user.username,
+      tutor: tutorUsername, // Add tutor's username here
       value: newRating,
     });
-
+  
     setRatings((prevRatings) => ({ ...prevRatings, [scheduleId]: newRating }));
   };
+  
   return (
     <div className="container mx-auto p-4 h-4/5 flex flex-col space-y-6 h-[80vh]">
       {/* Upcoming Classes Section */}
@@ -198,7 +199,7 @@ const DashboardStudentMyClasses = () => {
           )}
         </div>
       </div>
-      {/* Class History Section */}
+      {/*Class History Section in the return statement*/}
       <div className="flex flex-col flex-grow">
         <h2 className="text-2xl font-bold text-green-600 mb-6">
           Class History
@@ -228,7 +229,7 @@ const DashboardStudentMyClasses = () => {
                     name={`rating-${classItem.scheduleId}`}
                     value={Number(ratings[classItem.scheduleId]) || 0}
                     onChange={(event, newValue) => {
-                      handleRatingChange(classItem.scheduleId, newValue);
+                      handleRatingChange(classItem.scheduleId, newValue, classItem.tutor);
                     }}
                   />
                 </div>

@@ -299,7 +299,7 @@ const DashboardStudentHome = () => {
 
     return (
         <>
-            <main className="max-w-7xl mx-auto px-5 py-12 bg-gray-100">
+            <main className="mx-auto px-10 py-12 bg-gray-100">
                 <section className="mb-10 text-center">
                     <h2 className="text-3xl font-extrabold text-blue-700 mb-4">Welcome Back, {user && user.fullname}!</h2>
                     <p className="text-xl text-gray-700">Your learning journey continues. Here's a quick overview:</p>
